@@ -16,7 +16,9 @@
       overflow: hidden;
       padding-left: 52px;
       padding-right: 52px;
+      margin-bottom: 48px;
     }
+    .carrossel-modelos-wrap:last-child { margin-bottom: 0; }
     .carrossel-modelos-wrap .carrossel-titulo {
       text-align: left;
       font-size: 2rem;
@@ -213,8 +215,20 @@
   <div class="swiper-pagination carrossel-modelos-pagination"></div>
 </div>
 
-
-
+  <div id="carrossel-composicoes-wrap" class="carrossel-modelos-wrap">
+    <h2 class="carrossel-titulo">Composições que encantam</h2>
+    <div class="swiper carrossel-composicoes-swiper">
+      <div class="swiper-wrapper" id="carrossel-composicoes-wrapper"></div>
+      <span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
+    </div>
+    <div class="carrossel-nav-prev" role="button" aria-label="Slide anterior">
+      <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"><path d="M646 125C629 125 613 133 604 142L308 442C296 454 292 471 292 487 292 504 296 521 308 533L604 854C617 867 629 875 646 875 663 875 679 871 692 858 704 846 713 829 713 812 713 796 708 779 692 767L438 487 692 225C700 217 708 204 708 187 708 171 704 154 692 142 675 129 663 125 646 125Z"/></svg>
+    </div>
+    <div class="carrossel-nav-next" role="button" aria-label="Próximo slide">
+      <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"><path d="M696 533C708 521 713 504 713 487 713 471 708 454 696 446L400 146C388 133 375 125 354 125 338 125 325 129 313 142 300 154 292 171 292 187 292 204 296 221 308 233L563 492 304 771C292 783 288 800 288 817 288 833 296 850 308 863 321 871 338 875 354 875 371 875 388 867 400 854L696 533Z"/></svg>
+    </div>
+    <div class="swiper-pagination carrossel-composicoes-pagination"></div>
+  </div>
 
 </body>
 </html>
@@ -249,7 +263,19 @@
     { img: "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/4.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.", texto: "Solicitar Orçamento", novo: true },
     { img: "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/c0524a4a-6a50-4841-8483-913be4ef03a5.jpg.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.", texto: "Solicitar Orçamento", novo: true }
   ];
-  // ========== Fim da lista ==========
+  // ========== Composições que encantam ==========
+  var CARROSSEL_COMPOSICOES = [
+    { img: "Composições que encamtam/1_site.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/2_site.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/3.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/4_site.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/5.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/6.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/7_site.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/8_site.jpeg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/9_site.jpg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" },
+    { img: "Composições que encamtam/10_site.jpg", link: "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.", texto: "Solicitar Orçamento" }
+  ];
 
   var PRICE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M256 144C256 108.7 284.7 80 320 80C355.3 80 384 108.7 384 144L384 192L256 192L256 144zM208 192L144 192C117.5 192 96 213.5 96 240L96 448C96 501 139 544 192 544L448 544C501 544 544 501 544 448L544 240C544 213.5 522.5 192 496 192L432 192L432 144C432 82.1 381.9 32 320 32C258.1 32 208 82.1 208 144L208 192zM232 240C245.3 240 256 250.7 256 264C256 277.3 245.3 288 232 288C218.7 288 208 277.3 208 264C208 250.7 218.7 240 232 240zM384 264C384 250.7 394.7 240 408 240C421.3 240 432 250.7 432 264C432 277.3 421.3 288 408 288C394.7 288 384 277.3 384 264z"></path></svg>';
 
@@ -294,13 +320,45 @@
     wrapper.innerHTML = html;
   }
 
+  function slideHtmlComposicoes(item, index) {
+    var img = escapeHtml(item.img);
+    var imgHover = escapeHtml(item.imgHover || item.img);
+    var link = escapeHtml(item.link);
+    var texto = escapeHtml(item.texto || 'Solicitar Orçamento').replace(/&lt;br&gt;/gi, '<br>');
+    var num = index + 1;
+    var badgeClass = (item.img && item.img.indexOf('_site') !== -1) ? 'slide-num-badge' : 'slide-num-badge novo';
+    return '<div class="swiper-slide" role="group" aria-roledescription="slide" aria-label="' + num + ' / ' + CARROSSEL_COMPOSICOES.length + '">' +
+      '<div class="widget-container">' +
+        '<div class="image-wrapper">' +
+          '<div class="' + badgeClass + '">' + num + '</div>' +
+          '<img decoding="async" src="' + img + '" alt="Composição ' + num + '" class="widget-image">' +
+          '<div class="price-button">' + PRICE_ICON_SVG + '</div>' +
+        '</div>' +
+        '<div class="image-wrapper hidden">' +
+          '<div class="' + badgeClass + '">' + num + '</div>' +
+          '<img decoding="async" src="' + imgHover + '" alt="Composição ' + num + '" class="widget-image">' +
+          '<a href="' + link + '" class="orcamento-button" target="_blank" rel="noopener noreferrer">' + texto + '</a>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var wrapper2 = document.getElementById('carrossel-composicoes-wrapper');
+  if (wrapper2) {
+    var html2 = '';
+    for (var j = 0; j < CARROSSEL_COMPOSICOES.length; j++) {
+      html2 += slideHtmlComposicoes(CARROSSEL_COMPOSICOES[j], j);
+    }
+    wrapper2.innerHTML = html2;
+  }
+
   function initSwiper() {
     if (typeof Swiper === 'undefined') {
       setTimeout(initSwiper, 50);
       return;
     }
     var wrap = document.getElementById('carrossel-sweetgarden-modelos');
-    if (!wrap) return;
+    if (wrap) {
     new Swiper('.carrossel-modelos-swiper', {
       loop: true,
       speed: 500,
@@ -328,6 +386,37 @@
         paginationBulletMessage: 'Ir para o slide {{index}}'
       }
     });
+    }
+    var wrap2 = document.getElementById('carrossel-composicoes-wrap');
+    if (wrap2) {
+      new Swiper('.carrossel-composicoes-swiper', {
+        loop: true,
+        speed: 500,
+        spaceBetween: 12,
+        slidesPerGroup: 1,
+        slidesPerView: 4,
+        centeredSlides: false,
+        breakpoints: {
+          320: { slidesPerView: 1 },
+          576: { slidesPerView: 2 },
+          992: { slidesPerView: 3 },
+          1200: { slidesPerView: 4 }
+        },
+        navigation: {
+          nextEl: wrap2.querySelector('.carrossel-nav-next'),
+          prevEl: wrap2.querySelector('.carrossel-nav-prev')
+        },
+        pagination: {
+          el: wrap2.querySelector('.carrossel-composicoes-pagination'),
+          clickable: true
+        },
+        a11y: {
+          prevSlideMessage: 'Slide anterior',
+          nextSlideMessage: 'Próximo slide',
+          paginationBulletMessage: 'Ir para o slide {{index}}'
+        }
+      });
+    }
   }
 
   function doInit() {

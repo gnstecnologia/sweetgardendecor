@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
 import { getSiteData, setSiteData } from '@/lib/store';
 import type { SiteData } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const session = await getSession();
-  if (!session.isLoggedIn) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
   try {
     const data = await getSiteData();
     return NextResponse.json(data);
@@ -33,10 +28,6 @@ function isValidPayload(x: unknown): x is SiteData {
 }
 
 export async function PUT(req: Request) {
-  const session = await getSession();
-  if (!session.isLoggedIn) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
   try {
     const body = await req.json();
     if (!isValidPayload(body)) {

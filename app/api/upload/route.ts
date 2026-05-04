@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
-import { getSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session.isLoggedIn) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
   let form: FormData;
   try {
     form = await req.formData();

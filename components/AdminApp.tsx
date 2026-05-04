@@ -362,11 +362,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     }
   };
 
-  const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/admin/login';
-  };
-
   const addCarousel = () => {
     const tit = window.prompt('Título do novo carrossel', 'Novo carrossel');
     if (tit === null) return;
@@ -423,9 +418,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
             style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#2d6a4f', color: '#fff', fontWeight: 600, cursor: saving ? 'wait' : 'pointer' }}
           >
             {saving ? 'A guardar…' : 'Guardar no servidor'}
-          </button>
-          <button type="button" onClick={logout} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8e4', background: '#fff', cursor: 'pointer' }}>
-            Sair
           </button>
         </div>
       </header>

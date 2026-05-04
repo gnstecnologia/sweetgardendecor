@@ -668,11 +668,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
           </p>
         ) : null}
 
-        <p style={{ fontSize: '0.875rem', color: '#5c6f62', marginBottom: '1.25rem' }}>
-          Ao adicionar imagens (botão ou largar ficheiros), cada ficheiro é enviado para <code>/api/upload</code> e o catálogo é guardado logo a seguir.
-          Reordenar: <strong>Mover ordem…</strong>. Em local, ficheiros ficam em <code>public/uploads</code>; na Vercel use Blob + KV.
-        </p>
-
         {data.carrossels.map((block) => {
           const ids = block.slides.map((s) => s.sid!);
           const moveMode = moveModeCid === block.id;

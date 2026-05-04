@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
+import { getSupabaseServer, isSupabaseConfigured } from '@/lib/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,30 @@ export async function POST(req: Request) {
   const extMatch = orig.match(/(\.[a-z0-9]+)$/i);
   const ext = extMatch ? extMatch[1].toLowerCase() : '.jpg';
   const base = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`;
-  const key = `uploads/${base}`;
+  const objectPath = `uploads/${base}`;
+  const contentType = file.type || 'application/octet-stream';
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseServer();
+      const { error } = await supabase.storage.from('site-media').upload(objectPath, buf, {
+        contentType,
+        upsert: false,
+      });
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      const { data: pub } = supabase.storage.from('site-media').getPublicUrl(objectPath);
+      return NextResponse.json({ url: pub.publicUrl });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro no Storage';
+      return NextResponse.json({ error: msg }, { status: 500 });
+    }
+  }
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     const { put } = await import('@vercel/blob');
+    const key = `uploads/${base}`;
     const blob = await put(key, buf, {
       access: 'public',
       token: process.env.BLOB_READ_WRITE_TOKEN,

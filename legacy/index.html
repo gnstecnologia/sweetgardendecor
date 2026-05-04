@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sweet Garden</title>
+  <style>
+    .carrossel-modelos-wrap {
+      position: relative;
+      overflow: hidden;
+      padding-left: 52px;
+      padding-right: 52px;
+      margin-bottom: 48px;
+    }
+    .carrossel-modelos-wrap:last-child { margin-bottom: 0; }
+    .carrossel-modelos-wrap .carrossel-titulo {
+      text-align: left;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      padding: 0;
+    }
+    .carrossel-modelos-wrap .swiper { overflow: hidden; }
+    .carrossel-modelos-wrap .swiper-slide {
+      height: 420px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 1199px) {
+      .carrossel-modelos-wrap .swiper-slide { height: 380px; }
+    }
+    @media (max-width: 991px) {
+      .carrossel-modelos-wrap .swiper-slide { height: 340px; }
+      .carrossel-modelos-wrap { padding-left: 48px; padding-right: 48px; }
+    }
+    @media (max-width: 575px) {
+      .carrossel-modelos-wrap .swiper-slide { height: 300px; }
+      .carrossel-modelos-wrap { padding-left: 44px; padding-right: 44px; }
+    }
+    .carrossel-modelos-wrap .widget-container {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+      background-color: transparent;
+    }
+    .carrossel-modelos-wrap .image-wrapper {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .carrossel-modelos-wrap .widget-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+    .carrossel-modelos-wrap .price-button,
+    .carrossel-modelos-wrap .orcamento-button {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white !important;
+      border: none;
+      color: #000;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      text-decoration: none;
+    }
+    .carrossel-modelos-wrap .price-button {
+      width: 40px;
+      height: 40px;
+      left: auto;
+      right: 16px;
+      transform: none;
+      border-radius: 50%;
+      cursor: default;
+    }
+    .carrossel-modelos-wrap .price-button svg {
+      width: 30px;
+      height: 30px;
+      margin-top: 2px;
+    }
+    .carrossel-modelos-wrap .orcamento-button {
+      padding: 14px 22px;
+      border-radius: 24px;
+      white-space: nowrap;
+      min-width: max-content;
+      max-width: 90%;
+      text-align: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .carrossel-modelos-wrap .image-wrapper.hidden { display: none; }
+    .carrossel-modelos-wrap .widget-container:hover .image-wrapper:not(.hidden) { display: none; }
+    .carrossel-modelos-wrap .widget-container:hover .image-wrapper.hidden { display: block; }
+    .carrossel-modelos-wrap .carrossel-nav-prev,
+    .carrossel-modelos-wrap .carrossel-nav-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+      transition: opacity 0.2s;
+    }
+    .carrossel-modelos-wrap .carrossel-nav-prev:hover,
+    .carrossel-modelos-wrap .carrossel-nav-next:hover { opacity: 0.9; }
+    .carrossel-modelos-wrap .carrossel-nav-prev { left: 8px; }
+    .carrossel-modelos-wrap .carrossel-nav-next { right: 8px; }
+    .carrossel-modelos-wrap .carrossel-nav-prev svg,
+    .carrossel-modelos-wrap .carrossel-nav-next svg { width: 20px; height: 20px; }
+    .carrossel-modelos-wrap .swiper-pagination {
+      position: relative;
+      margin-top: 16px;
+    }
+    .carrossel-modelos-wrap .swiper-pagination-bullet {
+      width: 8px;
+      height: 8px;
+      background: #ccc;
+      opacity: 1;
+    }
+    .carrossel-modelos-wrap .swiper-pagination-bullet-active { background: #000; }
+    @media (max-width: 991px) {
+      .carrossel-modelos-wrap .price-button { width: 40px; height: 40px; }
+      .carrossel-modelos-wrap .orcamento-button { font-size: 14px; padding: 12px 20px; }
+    }
+    @media (max-width: 575px) {
+      .carrossel-modelos-wrap .price-button { width: 40px; height: 40px; }
+      .carrossel-modelos-wrap .orcamento-button { font-size: 13px; padding: 10px 18px; }
+      .carrossel-modelos-wrap .carrossel-nav-prev { left: 4px; }
+      .carrossel-modelos-wrap .carrossel-nav-next { right: 4px; }
+    }
+    .sweetgarden-load-error {
+      padding: 1.5rem;
+      font-family: system-ui, sans-serif;
+      max-width: 40rem;
+      margin: 2rem auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background: #fafafa;
+    }
+    .sweetgarden-load-error a { color: #0a5; }
+  </style>
+</head>
+<body>
+  <div id="sweetgarden-root"></div>
+  <script>
+(function () {
+  var PRICE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M256 144C256 108.7 284.7 80 320 80C355.3 80 384 108.7 384 144L384 192L256 192L256 144zM208 192L144 192C117.5 192 96 213.5 96 240L96 448C96 501 139 544 192 544L448 544C501 544 544 501 544 448L544 240C544 213.5 522.5 192 496 192L432 192L432 144C432 82.1 381.9 32 320 32C258.1 32 208 82.1 208 144L208 192zM232 240C245.3 240 256 250.7 256 264C256 277.3 245.3 288 232 288C218.7 288 208 277.3 208 264C208 250.7 218.7 240 232 240zM384 264C384 250.7 394.7 240 408 240C421.3 240 432 250.7 432 264C432 277.3 421.3 288 408 288C394.7 288 384 277.3 384 264z"></path></svg>';
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function imgSrcAttr(raw) {
+    if (!raw) return '';
+    return raw.indexOf('http') === 0 ? escapeHtml(raw) : escapeHtml(encodeURI(raw));
+  }
+
+  function slideHtml(item, index, total, kindLabel) {
+    var img = imgSrcAttr(item.img);
+    var imgHover = imgSrcAttr(item.imgHover || item.img);
+    var link = escapeHtml(item.link);
+    var texto = escapeHtml(item.texto || 'Solicitar Orçamento').replace(/&lt;br&gt;/gi, '<br>');
+    var num = index + 1;
+    var label = kindLabel + ' ' + num + ' / ' + total;
+    return (
+      '<div class="swiper-slide" role="group" aria-roledescription="slide" aria-label="' + escapeHtml(label) + '">' +
+        '<div class="widget-container">' +
+          '<div class="image-wrapper">' +
+            '<img decoding="async" src="' + img + '" alt="' + escapeHtml(kindLabel + ' ' + num) + '" class="widget-image">' +
+            '<div class="price-button">' + PRICE_ICON_SVG + '</div>' +
+          '</div>' +
+          '<div class="image-wrapper hidden">' +
+            '<img decoding="async" src="' + imgHover + '" alt="" class="widget-image">' +
+            '<a href="' + link + '" class="orcamento-button" target="_blank" rel="noopener noreferrer">' + texto + '</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderCarrossels(data, root) {
+    var html = '';
+    for (var c = 0; c < data.carrossels.length; c++) {
+      var block = data.carrossels[c];
+      var slides = block.slides || [];
+      if (!slides.length) continue;
+      var cid = escapeHtml(block.id);
+      var titulo = escapeHtml(block.titulo || 'Carrossel');
+      var kindLabel = titulo;
+      var slidesHtml = '';
+      for (var i = 0; i < slides.length; i++) {
+        slidesHtml += slideHtml(slides[i], i, slides.length, kindLabel);
+      }
+      html +=
+        '<div id="wrap-' + cid + '" class="carrossel-modelos-wrap" data-carrossel-id="' + cid + '">' +
+          '<h2 class="carrossel-titulo">' + titulo + '</h2>' +
+          '<div class="swiper carrossel-dynamic-swiper">' +
+            '<div class="swiper-wrapper">' + slidesHtml + '</div>' +
+            '<span class="swiper-notification" aria-live="assertive" aria-atomic="true"></span>' +
+          '</div>' +
+          '<div class="carrossel-nav-prev" role="button" tabindex="0" aria-label="Slide anterior">' +
+            '<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"><path d="M646 125C629 125 613 133 604 142L308 442C296 454 292 471 292 487 292 504 296 521 308 533L604 854C617 867 629 875 646 875 663 875 679 871 692 858 704 846 713 829 713 812 713 796 708 779 692 767L438 487 692 225C700 217 708 204 708 187 708 171 704 154 692 142 675 129 663 125 646 125Z"/></svg>' +
+          '</div>' +
+          '<div class="carrossel-nav-next" role="button" tabindex="0" aria-label="Próximo slide">' +
+            '<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"><path d="M696 533C708 521 713 504 713 487 713 471 708 454 696 446L400 146C388 133 375 125 354 125 338 125 325 129 313 142 300 154 292 171 292 187 292 204 296 221 308 233L563 492 304 771C292 783 288 800 288 817 288 833 296 850 308 863 321 871 338 875 354 875 371 875 388 867 400 854L696 533Z"/></svg>' +
+          '</div>' +
+          '<div class="swiper-pagination carrossel-dynamic-pagination"></div>' +
+        '</div>';
+    }
+    root.innerHTML = html;
+  }
+
+  function swiperLoopOk(n) {
+    return n >= 4;
+  }
+
+  function initSwipers() {
+    if (typeof Swiper === 'undefined') return;
+    var wraps = document.querySelectorAll('.carrossel-modelos-wrap[data-carrossel-id]');
+    for (var w = 0; w < wraps.length; w++) {
+      var wrap = wraps[w];
+      var swiperEl = wrap.querySelector('.carrossel-dynamic-swiper');
+      var n = swiperEl ? swiperEl.querySelectorAll('.swiper-slide').length : 0;
+      var loop = swiperLoopOk(n);
+      new Swiper(swiperEl, {
+        loop: loop,
+        rewind: !loop,
+        speed: 500,
+        spaceBetween: 12,
+        slidesPerGroup: 1,
+        slidesPerView: 4,
+        centeredSlides: false,
+        breakpoints: {
+          320: { slidesPerView: 1 },
+          576: { slidesPerView: 2 },
+          992: { slidesPerView: 3 },
+          1200: { slidesPerView: 4 }
+        },
+        navigation: {
+          nextEl: wrap.querySelector('.carrossel-nav-next'),
+          prevEl: wrap.querySelector('.carrossel-nav-prev')
+        },
+        pagination: {
+          el: wrap.querySelector('.carrossel-dynamic-pagination'),
+          clickable: true
+        },
+        a11y: {
+          prevSlideMessage: 'Slide anterior',
+          nextSlideMessage: 'Próximo slide',
+          paginationBulletMessage: 'Ir para o slide {{index}}'
+        }
+      });
+    }
+  }
+
+  function loadSwiperAndInit() {
+    if (typeof Swiper !== 'undefined') {
+      initSwipers();
+      return;
+    }
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css';
+    document.head.appendChild(link);
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js';
+    script.onload = initSwipers;
+    document.body.appendChild(script);
+  }
+
+  function showError(root, msg) {
+    root.innerHTML =
+      '<div class="sweetgarden-load-error" role="alert">' +
+        '<p><strong>Não foi possível carregar os carrosséis.</strong></p>' +
+        '<p>' + escapeHtml(msg) + '</p>' +
+        '<p>No <strong>GitHub Pages</strong> ou com <strong>Go Live / Live Server</strong> no VS Code isso já funciona (HTTP(S) estático, sem Vercel). Este erro costuma aparecer só se você abriu o arquivo pelo disco (<code>file://</code>) — use o URL publicado ou «Go Live» na pasta do projeto.</p>' +
+        '<p><a href="admin.html">Abrir painel de edição</a></p>' +
+      '</div>';
+  }
+
+  var root = document.getElementById('sweetgarden-root');
+  var dataUrl = new URL('site-data.json', window.location.href).href;
+  fetch(dataUrl, { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      if (!data || !Array.isArray(data.carrossels)) throw new Error('JSON inválido');
+      renderCarrossels(data, root);
+      loadSwiperAndInit();
+    })
+    .catch(function (e) {
+      showError(root, e.message || String(e));
+    });
+})();
+  </script>
+</body>
+</html>

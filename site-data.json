@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "carrossels": [
+    {
+      "id": "modelos",
+      "titulo": "Principais Modelos",
+      "slides": [
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/6d905d3a-f7aa-4020-8955-ad3152289709.jpg.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/1.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/2.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/3.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/ef6ff10e-2f8e-4da6-8aec-29c7e2511ccc.jpg.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/248ba63d-7684-478a-9bd8-1801946fe2cc.jpg.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Conico-Fit-com-Strelitzia-M-artificial-Modelo-Conico-Slim-P-com-Strelitzia-artificial-P.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Conico-Slim-M-com-Bananeira-Artificial-Modelo-Conico-Slim-P-com-Bananeira-Artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Elegance-versao-P-com-Bambu-Japones-P-artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Planta indisponível no momento<br>Consultar opções similares"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Conico-Slim-M-com-Bambu-Semi-Artificial-Modelo-Conico-Slim-P-com-Bambu-Semi-Artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/8a2937fa-7477-4e07-9dea-f49de06b2276.jpg.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/5.png",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/e6bd922d-92e7-4fa4-aa15-16e647f8fca6.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/c463a00d-ab7e-4779-a138-9e9ea34ff4b9.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/1d619aad-441f-494d-b022-b49e756e0622.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverAmarilis-com-Bambu-Semi-Artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Conico-Fit-com-Ficus-Lyrata-G.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Conico-Fit-com-Palmeira-artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/14c42c00-343a-4b31-86ad-b840292515af.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2025/08/shoverModelo-Elegance-versao-G-com-Bambu-Japones-artificial.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Planta indisponível no momento<br>Consultar opções similares"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/6cd2ef0e-039a-47f2-bc7b-7c0cf6cfede5.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/3d310a9f-0555-4dca-89e3-216a4a9f9ed0.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/01/26576d84-5c4c-4426-82f6-e5f80279c65e.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/4.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "https://sweetgardendecor.com.br/wp-content/uploads/2026/02/c0524a4a-6a50-4841-8483-913be4ef03a5.jpg.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para o modelo Iris G.",
+          "texto": "Solicitar Orçamento"
+        }
+      ]
+    },
+    {
+      "id": "composicoes",
+      "titulo": "Composições que encantam",
+      "slides": [
+        {
+          "img": "Composições que encamtam/1_site.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/2_site.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/3.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/4_site.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/5.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/6.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/7_site.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/8_site.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/9_site.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/10_site.jpg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/11.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/12.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/13.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/14.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/15.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/16.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        },
+        {
+          "img": "Composições que encamtam/17.jpeg",
+          "imgHover": "",
+          "link": "https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento para composição Sweet Garden.",
+          "texto": "Solicitar Orçamento"
+        }
+      ]
+    }
+  ]
+}

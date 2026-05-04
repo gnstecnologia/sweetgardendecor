@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sweet Garden — Edição dos carrosséis</title>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f4;
+      --card: #fff;
+      --border: #e2e8e4;
+      --text: #1a2e1f;
+      --muted: #5c6f62;
+      --accent: #2d6a4f;
+      --accent2: #40916c;
+      --danger: #b42318;
+      --shadow: 0 1px 3px rgba(0,0,0,.08);
+      --radius: 12px;
+      --tap: 44px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 1rem;
+      padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(244,246,244,.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      padding-top: max(0.75rem, env(safe-area-inset-top));
+    }
+    .topbar-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .topbar h1 {
+      font-size: 1.05rem;
+      margin: 0;
+      flex: 1 1 100%;
+      font-weight: 700;
+    }
+    @media (min-width: 640px) {
+      .topbar h1 { flex: 1 1 auto; font-size: 1.15rem; }
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      min-height: var(--tap);
+      padding: 0 0.9rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+    .btn-danger { color: var(--danger); border-color: #f5c2c0; background: #fff5f5; }
+    .btn-ghost { background: transparent; box-shadow: none; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 1rem; }
+    .hint {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin: 0.5rem 0 1rem;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+    .card-head label { display: block; font-size: 0.8rem; color: var(--muted); }
+    .field {
+      flex: 1 1 140px;
+    }
+    .field input[type="text"] {
+      width: 100%;
+      min-height: var(--tap);
+      padding: 0 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font: inherit;
+    }
+    .card-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #fafcfb;
+      border-bottom: 1px solid var(--border);
+    }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle input { width: 1.1rem; height: 1.1rem; }
+    .slides { padding: 0.5rem; }
+    .slide {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.6rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      margin-bottom: 0.35rem;
+      background: #fff;
+    }
+    @media (max-width: 639px) {
+      .slide.reorder-on {
+        flex-wrap: wrap;
+      }
+      .slide.reorder-on .handle {
+        flex: 1 1 100%;
+        width: auto;
+        text-align: center;
+        touch-action: none;
+      }
+      .slide.reorder-on .thumb-wrap { flex: 0 0 88px; }
+      .slide.reorder-on .slide-fields {
+        flex: 1 1 calc(100% - 88px - 0.6rem);
+        min-width: 0;
+      }
+    }
+    .slide.reorder-on {
+      border-color: #b7dfc8;
+      background: #f0faf4;
+    }
+    .slide.dragging { opacity: 0.55; }
+    .thumb-wrap {
+      position: relative;
+      flex: 0 0 88px;
+      width: 88px;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      background: #e8eee9;
+    }
+    @media (min-width: 640px) {
+      .thumb-wrap { flex-basis: 100px; width: 100px; }
+    }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      cursor: zoom-in;
+    }
+    .thumb-bad {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 0.25rem;
+    }
+    .slide-fields {
+      flex: 1;
+      min-width: 0;
+    }
+    .slide-fields input,
+    .slide-fields textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem 0.5rem;
+      font: inherit;
+      margin-bottom: 0.35rem;
+    }
+    .slide-fields textarea { min-height: 4.5rem; resize: vertical; }
+    .slide-fields small { color: var(--muted); font-size: 0.75rem; }
+    .handle {
+      flex: 0 0 36px;
+      cursor: grab;
+      text-align: center;
+      font-size: 1.2rem;
+      line-height: 1;
+      padding: 0.25rem;
+      color: var(--muted);
+      user-select: none;
+      touch-action: none;
+    }
+    .handle:active { cursor: grabbing; }
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+    }
+    .status {
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .status.on { display: block; }
+    .status.ok { background: #e6f4ea; color: #1e4620; }
+    .status.err { background: #fdecea; color: #611a15; }
+    dialog.lightbox {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      max-width: min(96vw, 900px);
+      background: #111;
+    }
+    dialog.lightbox::backdrop { background: rgba(0,0,0,.65); }
+    dialog.lightbox img {
+      display: block;
+      max-width: 96vw;
+      max-height: 86vh;
+      width: auto;
+      height: auto;
+    }
+    dialog.lightbox .lb-close {
+      position: fixed;
+      top: max(0.5rem, env(safe-area-inset-top));
+      right: max(0.5rem, env(safe-area-inset-right));
+      z-index: 2;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+    .flow-doc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+    .flow-doc h2 {
+      font-size: 1rem;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+    .flow-doc p { margin: 0.4rem 0; color: var(--muted); }
+    .flow-doc table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.65rem;
+      font-size: 0.8125rem;
+    }
+    .flow-doc th, .flow-doc td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.45rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .flow-doc th { background: #fafcfb; color: var(--text); }
+    .draft-note {
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.65rem;
+      background: #f0faf4;
+      border-radius: 8px;
+      border: 1px solid #c5e6d4;
+      font-size: 0.8125rem;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1>Sweet Garden — painel dos carrosséis</h1>
+      <a class="btn btn-ghost" href="index.html">Ver site</a>
+      <button type="button" class="btn" id="btn-reload-json">Carregar site-data.json</button>
+      <label class="btn btn-ghost" style="cursor:pointer">
+        Importar JSON
+        <input type="file" accept="application/json,.json" id="file-import-json" class="sr-only">
+      </label>
+      <button type="button" class="btn btn-primary" id="btn-export-zip">Exportar ZIP</button>
+      <button type="button" class="btn btn-ghost" id="btn-clear-draft" title="Apaga só o rascunho neste navegador">Limpar rascunho local</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="flow-doc">
+      <h2>Onde abrir o site e o painel</h2>
+      <p>Funciona em qualquer servidor estático por HTTP(S): <strong>GitHub Pages</strong>, <strong>Live Server / Go Live</strong> no VS Code, etc. Não precisa Vercel.</p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Onde abre</th>
+            <th scope="col">Carrega <code>site-data.json</code>?</th>
+            <th scope="col">Grava no Git / pasta do projeto sozinho?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GitHub Pages ou Go Live</td>
+            <td>Sim</td>
+            <td>Não — use <strong>Exportar ZIP</strong> e depois commit (ou copiar arquivos) no repositório.</td>
+          </tr>
+          <tr>
+            <td>Duplo clique no HTML (<code>file://</code>)</td>
+            <td>Geralmente não</td>
+            <td>Não</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.65rem">Edição na tela fica na <strong>memória do navegador</strong>. Este painel também guarda um <strong>rascunho local</strong> (textos, URLs e ordem) neste aparelho; <strong>fotos enviadas por arquivo</strong> nesta sessão só entram de verdade no projeto após <strong>Exportar ZIP</strong> e atualizar o repositório.</p>
+      <div class="draft-note" id="draft-status" aria-live="polite"></div>
+    </div>
+    <div id="status" class="status" role="status"></div>
+    <button type="button" class="btn btn-primary" id="btn-add-carousel" style="width:100%;margin-bottom:1rem;min-height:48px">
+      + Novo carrossel
+    </button>
+    <div id="app"></div>
+  </div>
+  <dialog id="lightbox" class="lightbox">
+    <button type="button" class="btn lb-close" id="lb-close">Fechar</button>
+    <img alt="" id="lb-img">
+  </dialog>
+  <script>
+(function () {
+  var DEFAULT_LINK = 'https://api.whatsapp.com/send?phone=5599999999999&text=Olá! Gostaria de solicitar um orçamento Sweet Garden.';
+  var DEFAULT_TEXTO = 'Solicitar Orçamento';
+
+  var state = { version: 1, carrossels: [] };
+  var DRAFT_KEY = 'sweetgarden-admin-draft-v1';
+  var draftSaveTimer = null;
+
+  function stateToStorable() {
+    return {
+      version: state.version || 1,
+      carrossels: state.carrossels.map(function (b) {
+        return {
+          id: b.id,
+          titulo: b.titulo,
+          reorder: !!b.reorder,
+          slides: b.slides.map(function (sl) {
+            return {
+              sid: sl.sid,
+              img: sl.img || '',
+              imgHover: sl.imgHover || '',
+              link: sl.link || '',
+              texto: sl.texto || ''
+            };
+          })
+        };
+      })
+    };
+  }
+
+  function updateDraftStatus() {
+    var el = document.getElementById('draft-status');
+    if (!el) return;
+    var d = null;
+    try {
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) d = JSON.parse(raw);
+    } catch (e) { d = null; }
+    if (!d || !d.savedAt) {
+      el.textContent = 'Nenhum rascunho guardado neste navegador.';
+      return;
+    }
+    el.textContent = 'Rascunho local: último auto-guardado em ' + new Date(d.savedAt).toLocaleString('pt-BR') + '.';
+  }
+
+  function saveDraftToStorage() {
+    try {
+      var pack = { savedAt: Date.now(), payload: stateToStorable() };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(pack));
+    } catch (e) {
+      showStatus('Não foi possível guardar o rascunho local (quota ou modo privado).', false);
+    }
+    updateDraftStatus();
+  }
+
+  function scheduleSaveDraft() {
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer = setTimeout(saveDraftToStorage, 450);
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    updateDraftStatus();
+  }
+
+  function uid(prefix) {
+    prefix = prefix || 'id';
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return prefix + '_' + crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+    return prefix + '_' + Math.random().toString(36).slice(2, 12);
+  }
+
+  function slug(s) {
+    return String(s || '')
+      .normalize('NFD').replace(/\p{M}/gu, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      .slice(0, 40) || 'carrossel';
+  }
+
+  function showStatus(msg, ok) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status on ' + (ok ? 'ok' : 'err');
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(function () { el.className = 'status'; }, 8000);
+  }
+
+  function revokeSlideBlobs(sl) {
+    if (sl._blobMain) { try { URL.revokeObjectURL(sl._blobMain); } catch (e) {} sl._blobMain = null; }
+    if (sl._blobHover) { try { URL.revokeObjectURL(sl._blobHover); } catch (e) {} sl._blobHover = null; }
+  }
+
+  function slidePreviewMain(sl) {
+    if (sl._blobMain) return sl._blobMain;
+    if (sl.img && sl.img.indexOf('http') === 0) return sl.img;
+    if (sl.img) return encodeURI(sl.img);
+    return '';
+  }
+
+  function slidePreviewHover(sl) {
+    if (sl._blobHover) return sl._blobHover;
+    var h = sl.imgHover || sl.img;
+    if (h && h.indexOf('http') === 0) return h;
+    if (h) return encodeURI(h);
+    return slidePreviewMain(sl);
+  }
+
+  function normalizeIncoming(data) {
+    if (!data || !Array.isArray(data.carrossels)) throw new Error('Formato inválido: falta carrossels');
+    var out = { version: data.version || 1, carrossels: [] };
+    for (var c = 0; c < data.carrossels.length; c++) {
+      var b = data.carrossels[c];
+      var cid = b.id || uid('c');
+      var slides = [];
+      var arr = b.slides || [];
+      for (var i = 0; i < arr.length; i++) {
+        var s = arr[i];
+        slides.push({
+          sid: s.sid || uid('s'),
+          img: s.img || '',
+          imgHover: s.imgHover || '',
+          link: s.link || DEFAULT_LINK,
+          texto: s.texto || DEFAULT_TEXTO,
+          _fileMain: null,
+          _fileHover: null,
+          _blobMain: null,
+          _blobHover: null
+        });
+      }
+      out.carrossels.push({
+        id: cid,
+        titulo: b.titulo || 'Carrossel',
+        reorder: !!b.reorder,
+        slides: slides
+      });
+    }
+    return out;
+  }
+
+  function applyState(data) {
+    for (var i = 0; i < state.carrossels.length; i++) {
+      var slides = state.carrossels[i].slides;
+      for (var j = 0; j < slides.length; j++) revokeSlideBlobs(slides[j]);
+    }
+    state = data;
+    render();
+  }
+
+  function findSlide(cid, sid) {
+    for (var i = 0; i < state.carrossels.length; i++) {
+      if (state.carrossels[i].id !== cid) continue;
+      var slides = state.carrossels[i].slides;
+      for (var j = 0; j < slides.length; j++) {
+        if (slides[j].sid === sid) return { ci: i, si: j, slide: slides[j], slides: slides };
+      }
+    }
+    return null;
+  }
+
+  function render() {
+    var app = document.getElementById('app');
+    var html = '';
+    for (var c = 0; c < state.carrossels.length; c++) {
+      var block = state.carrossels[c];
+      var cid = escapeAttr(block.id);
+      var tit = escapeHtml(block.titulo);
+      html += '<section class="card" data-cid="' + cid + '">';
+      html += '<div class="card-head">';
+      html += '<div class="field"><label for="tit-' + cid + '">Título do carrossel</label>';
+      html += '<input type="text" id="tit-' + cid + '" data-act="titulo" value="' + tit + '"></div>';
+      html += '<button type="button" class="btn btn-danger" data-act="del-carousel">Excluir carrossel</button>';
+      html += '</div>';
+      html += '<div class="card-tools">';
+      html += '<label class="toggle"><input type="checkbox" data-act="toggle-reorder"' + (block.reorder ? ' checked' : '') + '><span>Modo reordenar (arrastar e botões)</span></label>';
+      html += '<label class="btn btn-ghost" style="cursor:pointer">Adicionar fotos';
+      html += '<input type="file" accept="image/*" multiple class="sr-only" data-act="add-files"></label>';
+      html += '<button type="button" class="btn" data-act="preview-carousel">Pré-visualizar</button>';
+      html += '</div>';
+      html += '<div class="slides">';
+      for (var s = 0; s < block.slides.length; s++) {
+        html += renderSlide(block, block.slides[s], s);
+      }
+      if (!block.slides.length) {
+        html += '<p class="hint" style="padding:0.5rem 0.25rem">Nenhuma foto neste carrossel. Use «Adicionar fotos».</p>';
+      }
+      html += '</div></section>';
+    }
+    if (!state.carrossels.length) {
+      html = '<p class="hint">Nenhum carrossel. Clique em «Novo carrossel» ou carregue o JSON.</p>';
+    }
+    app.innerHTML = html;
+    scheduleSaveDraft();
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#39;'); }
+
+  function renderSlide(block, sl, index) {
+    var sid = escapeAttr(sl.sid);
+    var pm = slidePreviewMain(sl);
+    var reorder = block.reorder;
+    var rowClass = 'slide' + (reorder ? ' reorder-on' : '');
+    var thumb = pm
+      ? '<img src="' + escapeAttr(pm) + '" alt="" data-act="zoom" loading="lazy">'
+      : '<div class="thumb-bad">Sem imagem</div>';
+    var handle = reorder
+      ? '<div class="handle" draggable="true" data-act="drag-handle" aria-label="Arrastar para reordenar">⠿</div>'
+      : '';
+    return (
+      '<div class="' + rowClass + '" data-sid="' + sid + '" data-index="' + index + '">' +
+        handle +
+        '<div class="thumb-wrap">' + thumb + '</div>' +
+        '<div class="slide-fields">' +
+          '<small>Imagem principal</small><br>' +
+          '<label class="btn btn-ghost" style="cursor:pointer;font-size:.85rem">Trocar…<input type="file" accept="image/*" class="sr-only" data-act="file-main"></label> ' +
+          '<label class="btn btn-ghost" style="cursor:pointer;font-size:.85rem">Hover…<input type="file" accept="image/*" class="sr-only" data-act="file-hover"></label>' +
+          '<input type="text" placeholder="URL ou caminho (se já estiver no site)" data-act="img-url" value="' + escapeAttr(sl.img) + '">' +
+          '<input type="text" placeholder="Imagem no hover (opcional, URL ou caminho)" data-act="hover-url" value="' + escapeAttr(sl.imgHover) + '">' +
+          '<input type="text" placeholder="Link do botão" data-act="link" value="' + escapeAttr(sl.link) + '">' +
+          '<textarea data-act="texto" placeholder="Texto do botão (HTML &lt;br&gt; permitido)">' + escapeHtml(sl.texto) + '</textarea>' +
+          '<div class="row-actions">' +
+            '<button type="button" class="btn" data-act="up"' + (index === 0 ? ' disabled' : '') + '>Subir</button>' +
+            '<button type="button" class="btn" data-act="down"' + (index >= block.slides.length - 1 ? ' disabled' : '') + '>Descer</button>' +
+            '<button type="button" class="btn btn-danger" data-act="del-slide">Remover do carrossel</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function bindAppEvents() {
+    var app = document.getElementById('app');
+    app.onclick = function (e) {
+      var t = e.target.closest('[data-act]');
+      if (!t) return;
+      var card = t.closest('.card');
+      if (!card) return;
+      var cid = card.getAttribute('data-cid');
+      var act = t.getAttribute('data-act');
+      if (act === 'del-carousel') {
+        if (!confirm('Excluir este carrossel inteiro?')) return;
+        var idx = state.carrossels.findIndex(function (x) { return x.id === cid; });
+        if (idx >= 0) {
+          state.carrossels[idx].slides.forEach(revokeSlideBlobs);
+          state.carrossels.splice(idx, 1);
+          render();
+        }
+        return;
+      }
+      if (act === 'preview-carousel') {
+        openPreviewCarousel(cid);
+        return;
+      }
+      var slideEl = t.closest('.slide');
+      if (!slideEl) return;
+      var sid = slideEl.getAttribute('data-sid');
+      var found = findSlide(cid, sid);
+      if (!found) return;
+      if (act === 'zoom') {
+        var lb = document.getElementById('lightbox');
+        document.getElementById('lb-img').src = slidePreviewMain(found.slide);
+        lb.showModal();
+        return;
+      }
+      if (act === 'del-slide') {
+        revokeSlideBlobs(found.slide);
+        found.slides.splice(found.si, 1);
+        render();
+        return;
+      }
+      if (act === 'up' && found.si > 0) {
+        var tmp = found.slides[found.si - 1];
+        found.slides[found.si - 1] = found.slides[found.si];
+        found.slides[found.si] = tmp;
+        render();
+        return;
+      }
+      if (act === 'down' && found.si < found.slides.length - 1) {
+        var t2 = found.slides[found.si + 1];
+        found.slides[found.si + 1] = found.slides[found.si];
+        found.slides[found.si] = t2;
+        render();
+        return;
+      }
+    };
+
+    app.onchange = function (e) {
+      var t = e.target;
+      var card = t.closest('.card');
+      if (!card) return;
+      var cid = card.getAttribute('data-cid');
+      if (t.matches('[data-act="titulo"]')) {
+        var b = state.carrossels.find(function (x) { return x.id === cid; });
+        if (b) b.titulo = t.value;
+        scheduleSaveDraft();
+        return;
+      }
+      if (t.matches('[data-act="toggle-reorder"]')) {
+        var b2 = state.carrossels.find(function (x) { return x.id === cid; });
+        if (b2) b2.reorder = t.checked;
+        render();
+        return;
+      }
+      if (t.matches('[data-act="add-files"]') && t.files && t.files.length) {
+        var b3 = state.carrossels.find(function (x) { return x.id === cid; });
+        if (!b3) return;
+        var defLink = (b3.slides[0] && b3.slides[0].link) || DEFAULT_LINK;
+        var defTexto = (b3.slides[0] && b3.slides[0].texto) || DEFAULT_TEXTO;
+        for (var i = 0; i < t.files.length; i++) {
+          var f = t.files[i];
+          if (!f.type || f.type.indexOf('image') !== 0) continue;
+          var sl = {
+            sid: uid('s'),
+            img: '',
+            imgHover: '',
+            link: defLink,
+            texto: defTexto,
+            _fileMain: f,
+            _fileHover: null,
+            _blobMain: URL.createObjectURL(f),
+            _blobHover: null
+          };
+          b3.slides.push(sl);
+        }
+        t.value = '';
+        render();
+        return;
+      }
+      var slideEl = t.closest('.slide');
+      if (!slideEl) return;
+      var sid = slideEl.getAttribute('data-sid');
+      var found = findSlide(cid, sid);
+      if (!found) return;
+      if (t.matches('[data-act="file-main"]') && t.files && t.files[0]) {
+        revokeSlideBlobs(found.slide);
+        found.slide._fileMain = t.files[0];
+        found.slide._blobMain = URL.createObjectURL(t.files[0]);
+        found.slide.img = '';
+        t.value = '';
+        render();
+        return;
+      }
+      if (t.matches('[data-act="file-hover"]') && t.files && t.files[0]) {
+        if (found.slide._blobHover) try { URL.revokeObjectURL(found.slide._blobHover); } catch (err) {}
+        found.slide._fileHover = t.files[0];
+        found.slide._blobHover = URL.createObjectURL(t.files[0]);
+        found.slide.imgHover = '';
+        t.value = '';
+        render();
+        return;
+      }
+    };
+
+    app.oninput = function (e) {
+      var t = e.target;
+      var slideEl = t.closest('.slide');
+      if (!slideEl) return;
+      var card = t.closest('.card');
+      var cid = card.getAttribute('data-cid');
+      var sid = slideEl.getAttribute('data-sid');
+      var found = findSlide(cid, sid);
+      if (!found) return;
+      if (t.matches('[data-act="img-url"]')) {
+        found.slide.img = t.value;
+        if (t.value) { found.slide._fileMain = null; if (found.slide._blobMain) { URL.revokeObjectURL(found.slide._blobMain); found.slide._blobMain = null; } }
+        scheduleSaveDraft();
+        return;
+      }
+      if (t.matches('[data-act="hover-url"]')) {
+        found.slide.imgHover = t.value;
+        if (t.value) { found.slide._fileHover = null; if (found.slide._blobHover) { URL.revokeObjectURL(found.slide._blobHover); found.slide._blobHover = null; } }
+        scheduleSaveDraft();
+        return;
+      }
+      if (t.matches('[data-act="link"]')) { found.slide.link = t.value; scheduleSaveDraft(); return; }
+      if (t.matches('[data-act="texto"]')) { found.slide.texto = t.value; scheduleSaveDraft(); return; }
+    };
+
+    var dragFrom = null;
+    app.ondragstart = function (e) {
+      var h = e.target.closest('[data-act="drag-handle"]');
+      if (!h) return;
+      var row = h.closest('.slide');
+      var card = h.closest('.card');
+      if (!row || !card) return;
+      dragFrom = { cid: card.getAttribute('data-cid'), sid: row.getAttribute('data-sid') };
+      row.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', dragFrom.cid + '|' + dragFrom.sid);
+      e.dataTransfer.effectAllowed = 'move';
+    };
+    app.ondragend = function (e) {
+      var row = e.target.closest('.slide');
+      if (row) row.classList.remove('dragging');
+      dragFrom = null;
+    };
+    app.ondragover = function (e) {
+      var row = e.target.closest('.slide');
+      if (!row || !dragFrom) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    };
+    app.ondrop = function (e) {
+      var row = e.target.closest('.slide');
+      if (!row || !dragFrom) return;
+      e.preventDefault();
+      var card = row.closest('.card');
+      var cidTo = card.getAttribute('data-cid');
+      if (cidTo !== dragFrom.cid) return;
+      var sidTo = row.getAttribute('data-sid');
+      var b = state.carrossels.find(function (x) { return x.id === dragFrom.cid; });
+      if (!b) return;
+      var iFrom = b.slides.findIndex(function (s) { return s.sid === dragFrom.sid; });
+      var iTo = b.slides.findIndex(function (s) { return s.sid === sidTo; });
+      if (iFrom < 0 || iTo < 0 || iFrom === iTo) return;
+      var mv = b.slides.splice(iFrom, 1)[0];
+      b.slides.splice(iTo, 0, mv);
+      render();
+    };
+  }
+
+  function previewSlideImgSrc(sl, hover) {
+    if (hover) {
+      if (sl._blobHover) return sl._blobHover;
+      var h = sl.imgHover || sl.img || '';
+      if (h.indexOf('http') === 0) return h;
+      return h;
+    }
+    if (sl._blobMain) return sl._blobMain;
+    if (sl.img && sl.img.indexOf('http') === 0) return sl.img;
+    return sl.img || '';
+  }
+
+  function openPreviewCarousel(cid) {
+    var b = state.carrossels.find(function (x) { return x.id === cid; });
+    if (!b || !b.slides.length) {
+      showStatus('Este carrossel não tem fotos para pré-visualizar.', false);
+      return;
+    }
+    var w = window.open('', '_blank');
+    if (!w) {
+      showStatus('Permita pop-ups para a pré-visualização.', false);
+      return;
+    }
+    var siteBase = new URL('./', window.location.href).href;
+    var slidesHtml = '';
+    for (var i = 0; i < b.slides.length; i++) {
+      var sl = b.slides[i];
+      var main = previewSlideImgSrc(sl, false);
+      var hover = previewSlideImgSrc(sl, true);
+      var link = escapeHtml(sl.link);
+      var texto = escapeHtml(sl.texto || '').replace(/&lt;br&gt;/gi, '<br>');
+      slidesHtml +=
+        '<div class="swiper-slide"><div class="widget-container">' +
+        '<div class="image-wrapper"><img class="widget-image" src="' + escapeAttr(main) + '" alt=""></div>' +
+        '<div class="image-wrapper hidden"><img class="widget-image" src="' + escapeAttr(hover) + '" alt="">' +
+        '<a class="orcamento-button" href="' + link + '" target="_blank" rel="noopener">' + texto + '</a></div></div></div>';
+    }
+    var doc =
+      '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<base href="' + escapeAttr(siteBase) + '">' +
+      '<title>Prévia — ' + escapeHtml(b.titulo) + '</title>' +
+      '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">' +
+      '<style>' +
+      'body{margin:0;font-family:system-ui,sans-serif;background:#f4f6f4;padding:1rem}' +
+      'h1{font-size:1.2rem;margin:0 0 1rem}' +
+      '.carrossel-modelos-wrap{position:relative;overflow:hidden;padding:0 48px 2rem;max-width:1100px;margin:0 auto}' +
+      '.swiper-slide{height:360px}' +
+      '@media(max-width:575px){.swiper-slide{height:280px}}' +
+      '.widget-container{position:relative;height:100%;border-radius:12px;overflow:hidden}' +
+      '.image-wrapper{position:absolute;inset:0}' +
+      '.widget-image{width:100%;height:100%;object-fit:cover;border-radius:12px}' +
+      '.image-wrapper.hidden{display:none}' +
+      '.widget-container:hover .image-wrapper:not(.hidden){display:none}' +
+      '.widget-container:hover .image-wrapper.hidden{display:block}' +
+      '.orcamento-button{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#fff;color:#000;text-decoration:none;padding:12px 20px;border-radius:24px;font-weight:700;font-size:15px;white-space:nowrap;max-width:90%;text-align:center}' +
+      '.nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.12)}' +
+      '.nav.prev{left:4px}.nav.next{right:4px}' +
+      '</style></head><body><h1>' + escapeHtml(b.titulo) + '</h1>' +
+      '<div class="carrossel-modelos-wrap"><div class="swiper pv"><div class="swiper-wrapper">' + slidesHtml + '</div></div>' +
+      '<div class="nav prev" id="p">‹</div><div class="nav next" id="n">›</div><div class="swiper-pagination" id="pg"></div></div>' +
+      '<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"><\/script>' +
+      '<script>new Swiper(".pv",{loop:' + (b.slides.length >= 4 ? 'true' : 'false') + ',rewind:' + (b.slides.length >= 4 ? 'false' : 'true') + ',spaceBetween:12,slidesPerView:1,breakpoints:{576:{slidesPerView:2},992:{slidesPerView:3}},navigation:{prevEl:"#p",nextEl:"#n"},pagination:{el:"#pg",clickable:true}});<\/script></body></html>';
+    w.document.open();
+    w.document.write(doc);
+    w.document.close();
+  }
+
+  function extFromFile(f) {
+    var n = (f && f.name) || '';
+    var m = n.match(/(\.[a-z0-9]+)$/i);
+    return (m ? m[1] : '.jpg').toLowerCase();
+  }
+
+  function exportZip() {
+    if (typeof JSZip === 'undefined') {
+      showStatus('JSZip não carregou. Verifique a conexão.', false);
+      return;
+    }
+    var zip = new JSZip();
+    var jsonData = { version: 1, carrossels: [] };
+    for (var c = 0; c < state.carrossels.length; c++) {
+      var block = state.carrossels[c];
+      var cleanSlides = [];
+      for (var s = 0; s < block.slides.length; s++) {
+        var sl = block.slides[s];
+        var copy = { img: sl.img, imgHover: sl.imgHover || '', link: sl.link, texto: sl.texto };
+        if (sl._fileMain) {
+          var pathMain = 'media/' + block.id + '/' + uid('img') + extFromFile(sl._fileMain);
+          zip.file(pathMain, sl._fileMain);
+          copy.img = pathMain.replace(/\\/g, '/');
+        } else if (!copy.img || !String(copy.img).trim()) {
+          showStatus('Há slide sem imagem (nem arquivo nem URL). Corrija antes de exportar.', false);
+          return;
+        }
+        if (sl._fileHover) {
+          var pathH = 'media/' + block.id + '/' + uid('img') + extFromFile(sl._fileHover);
+          zip.file(pathH, sl._fileHover);
+          copy.imgHover = pathH.replace(/\\/g, '/');
+        }
+        cleanSlides.push(copy);
+      }
+      jsonData.carrossels.push({ id: block.id, titulo: block.titulo, slides: cleanSlides });
+    }
+    zip.file('site-data.json', JSON.stringify(jsonData, null, 2));
+    zip.generateAsync({ type: 'blob' }).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sweetgarden-export.zip';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      clearDraft();
+      showStatus('ZIP gerado: substitua site-data.json e pastas media/ no repositório. Rascunho local limpo.', true);
+    }).catch(function (err) {
+      showStatus(String(err.message || err), false);
+    });
+  }
+
+  function loadJsonFile(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        clearDraft();
+        applyState(normalizeIncoming(data));
+        showStatus('JSON importado. Rascunho local anterior foi descartado.', true);
+      } catch (err) {
+        showStatus('Erro ao ler JSON: ' + (err.message || err), false);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function fetchSiteData(opts) {
+    opts = opts || {};
+    if (opts.confirmReplace && state.carrossels && state.carrossels.length) {
+      if (!confirm('Substituir a edição atual pelo site-data.json do servidor?')) return;
+    }
+    var dataUrl = new URL('site-data.json', window.location.href).href;
+    fetch(dataUrl, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        applyState(normalizeIncoming(data));
+        showStatus('site-data.json carregado.', true);
+      })
+      .catch(function (e) {
+        showStatus('Não carregou site-data.json (' + (e.message || e) + '). No GitHub Pages use o URL publicado; localmente use Go Live / Live Server ou Importar JSON.', false);
+      });
+  }
+
+  document.getElementById('btn-reload-json').onclick = function () { fetchSiteData({ confirmReplace: true }); };
+  document.getElementById('btn-export-zip').onclick = exportZip;
+  document.getElementById('btn-add-carousel').onclick = function () {
+    var tit = prompt('Título do novo carrossel', 'Novo carrossel');
+    if (tit === null) return;
+    tit = tit.trim() || 'Novo carrossel';
+    var id = slug(tit) + '-' + Math.random().toString(36).slice(2, 5);
+    state.carrossels.push({ id: id, titulo: tit, reorder: false, slides: [] });
+    render();
+    showStatus('Carrossel criado. Ative «Adicionar fotos».', true);
+  };
+  document.getElementById('file-import-json').onchange = function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) loadJsonFile(f);
+    e.target.value = '';
+  };
+
+  document.getElementById('lb-close').onclick = function () {
+    document.getElementById('lightbox').close();
+  };
+  document.getElementById('lightbox').onclick = function (e) {
+    if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').close();
+  };
+
+  document.getElementById('btn-clear-draft').onclick = function () {
+    if (!confirm('Apagar o rascunho guardado neste navegador? (Não altera o site no GitHub.)')) return;
+    clearDraft();
+    showStatus('Rascunho local removido.', true);
+  };
+
+  bindAppEvents();
+  updateDraftStatus();
+  (function initDraftOrFetch() {
+    var d = null;
+    try {
+      var raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) d = JSON.parse(raw);
+    } catch (e) { d = null; }
+    if (d && d.payload && Array.isArray(d.payload.carrossels) && d.payload.carrossels.length) {
+      var when = d.savedAt ? new Date(d.savedAt).toLocaleString('pt-BR') : '?';
+      if (confirm('Há um rascunho guardado neste navegador (' + when + ').\n\nOK = restaurar esse rascunho.\nCancelar = carregar site-data.json do servidor.')) {
+        applyState(normalizeIncoming(d.payload));
+        showStatus('Rascunho restaurado. Fotos enviadas só nesta aba podem precisar ser escolhidas de novo; use Exportar ZIP para gravar no projeto.', true);
+        return;
+      }
+    }
+    fetchSiteData({});
+  })();
+})();
+  </script>
+</body>
+</html>

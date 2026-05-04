@@ -1,8 +1,10 @@
 'use client';
 
-import { useId } from 'react';
+import type { MutableRefObject } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -72,8 +74,71 @@ function swiperLoopOk(n: number) {
   return n >= 4;
 }
 
-export default function PublicCarrossels({ data }: { data: SiteData }) {
+export default function PublicCarrossels({
+  data,
+  adminStripElementsRef,
+  adminStripBlockId,
+  adminScrollLayoutKey,
+}: {
+  data: SiteData;
+  /** Painel admin: mapa id do carrossel → elemento com scroll horizontal das miniaturas. */
+  adminStripElementsRef?: MutableRefObject<Record<string, HTMLDivElement | null>>;
+  /** Id do bloco em `data.carrossels[0]` a sincronizar com `adminStripElementsRef`. */
+  adminStripBlockId?: string;
+  /** Quando muda, volta a ligar o listener (ex.: ordem ou nº de slides). */
+  adminScrollLayoutKey?: string;
+}) {
   const baseId = useId().replace(/:/g, '');
+  const swiperRef = useRef<SwiperType | null>(null);
+
+  useEffect(() => {
+    if (!adminStripElementsRef || !adminStripBlockId) return;
+
+    let scrollCleanup: (() => void) | undefined;
+    let rafId = 0;
+    let attempts = 0;
+    const maxAttempts = 150;
+
+    const tryAttach = () => {
+      const strip = adminStripElementsRef.current[adminStripBlockId] ?? null;
+      const sw = swiperRef.current;
+      const slides = data.carrossels[0]?.slides ?? [];
+      const n = slides.length;
+      if (!strip || !sw || n < 1) {
+        attempts += 1;
+        if (attempts < maxAttempts) rafId = requestAnimationFrame(tryAttach);
+        return;
+      }
+
+      const syncStripScrollToSwiper = () => {
+        if ('destroyed' in sw && sw.destroyed) return;
+        const maxScroll = Math.max(0, strip.scrollWidth - strip.clientWidth);
+        let index = 0;
+        if (maxScroll > 0 && n > 1) {
+          index = Math.round((strip.scrollLeft / maxScroll) * (n - 1));
+        }
+        index = Math.max(0, Math.min(n - 1, index));
+        const current = sw.params.loop ? sw.realIndex : sw.activeIndex;
+        if (current === index) return;
+        if (sw.params.loop) {
+          sw.slideToLoop(index, 0);
+        } else {
+          sw.slideTo(index, 0);
+        }
+      };
+
+      strip.addEventListener('scroll', syncStripScrollToSwiper, { passive: true });
+      syncStripScrollToSwiper();
+      scrollCleanup = () => strip.removeEventListener('scroll', syncStripScrollToSwiper);
+    };
+
+    tryAttach();
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      scrollCleanup?.();
+    };
+  }, [adminStripElementsRef, adminStripBlockId, adminScrollLayoutKey, data]);
 
   return (
     <>
@@ -115,6 +180,9 @@ export default function PublicCarrossels({ data }: { data: SiteData }) {
                 prevSlideMessage: 'Slide anterior',
                 nextSlideMessage: 'Próximo slide',
                 paginationBulletMessage: 'Ir para o slide {{index}}',
+              }}
+              onSwiper={(sw) => {
+                swiperRef.current = sw;
               }}
             >
               {slides.map((item, i) => (

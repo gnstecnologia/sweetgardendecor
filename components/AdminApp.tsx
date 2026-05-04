@@ -381,6 +381,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   const pendingUploadCidRef = useRef<string | null>(null);
   const dataRef = useRef(data);
   dataRef.current = data;
+  /** Scroll horizontal das miniaturas (admin) — sincroniza com o Swiper da pré-visualização. */
+  const adminStripElRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const [adminStripSyncKey, setAdminStripSyncKey] = useState<Record<string, number>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
@@ -721,7 +724,12 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
               >
                 <p style={{ margin: '0 16px 8px', fontSize: 12, color: '#5c6f62' }}>Pré-visualização (como no site)</p>
                 <div style={{ pointerEvents: 'none', userSelect: 'none', maxHeight: 460, overflow: 'hidden' }}>
-                  <PublicCarrossels data={previewSlice} />
+                  <PublicCarrossels
+                    data={previewSlice}
+                    adminStripElementsRef={adminStripElRef}
+                    adminStripBlockId={block.id}
+                    adminScrollLayoutKey={`${block.id}-${ids.join('|')}-${adminStripSyncKey[block.id] ?? 0}`}
+                  />
                 </div>
               </div>
 
@@ -766,6 +774,13 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd(block.id, ids)}>
                   <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
                     <div
+                      ref={(el) => {
+                        const prev = adminStripElRef.current[block.id];
+                        adminStripElRef.current[block.id] = el;
+                        if (prev !== el) {
+                          setAdminStripSyncKey((m) => ({ ...m, [block.id]: (m[block.id] ?? 0) + 1 }));
+                        }
+                      }}
                       className="admin-strip-scroll"
                       style={{
                         display: 'flex',

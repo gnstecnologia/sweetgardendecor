@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type { CSSProperties, MutableRefObject, ReactNode } from 'react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -84,6 +85,32 @@ function mergeNewSlidesIntoCarousel(prev: SiteData, cid: string, newSlides: Slid
     ...prev,
     carrossels: prev.carrossels.map((c) => (c.id !== cid ? c : { ...c, slides: [...c.slides, ...newSlides] })),
   };
+}
+
+/** Ref estável no elemento com scroll — evita setState no ref (causava loop infinito com ref inline). */
+function AdminStripScrollHost({
+  blockId,
+  stripRegistryRef,
+  style,
+  children,
+}: {
+  blockId: string;
+  stripRegistryRef: MutableRefObject<Record<string, HTMLDivElement | null>>;
+  style: CSSProperties;
+  children: ReactNode;
+}) {
+  const refCb = useCallback(
+    (el: HTMLDivElement | null) => {
+      stripRegistryRef.current[blockId] = el;
+    },
+    [blockId, stripRegistryRef]
+  );
+
+  return (
+    <div ref={refCb} className="admin-strip-scroll" style={style}>
+      {children}
+    </div>
+  );
 }
 
 function SortableStripCard({
@@ -383,7 +410,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   dataRef.current = data;
   /** Scroll horizontal das miniaturas (admin) — sincroniza com o Swiper da pré-visualização. */
   const adminStripElRef = useRef<Record<string, HTMLDivElement | null>>({});
-  const [adminStripSyncKey, setAdminStripSyncKey] = useState<Record<string, number>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
@@ -728,7 +754,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                     data={previewSlice}
                     adminStripElementsRef={adminStripElRef}
                     adminStripBlockId={block.id}
-                    adminScrollLayoutKey={`${block.id}-${ids.join('|')}-${adminStripSyncKey[block.id] ?? 0}`}
+                    adminScrollLayoutKey={`${block.id}-${ids.join('|')}`}
                   />
                 </div>
               </div>
@@ -773,15 +799,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
               <div style={{ padding: '14px 12px 8px' }}>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd(block.id, ids)}>
                   <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
-                    <div
-                      ref={(el) => {
-                        const prev = adminStripElRef.current[block.id];
-                        adminStripElRef.current[block.id] = el;
-                        if (prev !== el) {
-                          setAdminStripSyncKey((m) => ({ ...m, [block.id]: (m[block.id] ?? 0) + 1 }));
-                        }
-                      }}
-                      className="admin-strip-scroll"
+                    <AdminStripScrollHost
+                      blockId={block.id}
+                      stripRegistryRef={adminStripElRef}
                       style={{
                         display: 'flex',
                         gap: 12,
@@ -810,7 +830,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                           />
                         </div>
                       ))}
-                    </div>
+                    </AdminStripScrollHost>
                   </SortableContext>
                 </DndContext>
 

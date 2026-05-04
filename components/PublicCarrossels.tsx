@@ -141,15 +141,41 @@ export default function PublicCarrossels({
     <>
       {data.carrossels.map((block) => {
         const slides = block.slides || [];
-        if (!slides.length) return null;
         const cid = block.id.replace(/[^a-zA-Z0-9_-]/g, '_');
         const wrapId = `wrap-${baseId}-${cid}`;
+        const swiperRemountKey =
+          adminScrollLayoutKey ??
+          `${block.id}-${slides.length}-${slides.map((s, i) => s.sid ?? `i${i}`).join('|')}`;
+
+        if (!slides.length) {
+          return (
+            <div key={block.id} id={wrapId} className="carrossel-modelos-wrap" data-carrossel-id={cid}>
+              <h2 className="carrossel-titulo">{block.titulo}</h2>
+              <p
+                className="carrossel-empty-preview"
+                style={{
+                  margin: '1rem 0 1.25rem',
+                  padding: '1rem 1.25rem',
+                  borderRadius: 12,
+                  background: 'rgba(255,255,255,.06)',
+                  color: 'var(--sg-muted, #5c6f62)',
+                  fontSize: 15,
+                  textAlign: 'center',
+                }}
+              >
+                Adicione imagens para ver a pré-visualização.
+              </p>
+            </div>
+          );
+        }
+
         const loop = swiperLoopOk(slides.length);
 
         return (
           <div key={block.id} id={wrapId} className="carrossel-modelos-wrap" data-carrossel-id={cid}>
             <h2 className="carrossel-titulo">{block.titulo}</h2>
             <Swiper
+              key={swiperRemountKey}
               className="swiper carrossel-dynamic-swiper"
               modules={[Navigation, Pagination, A11y]}
               loop={loop}

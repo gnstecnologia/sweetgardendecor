@@ -529,7 +529,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
       const msg = e instanceof Error ? e.message : 'Erro';
       setStatus({
         ok: false,
-        msg: `Imagens enviadas para disco/Blob, mas falhou guardar o catálogo: ${msg}. Use «Guardar no servidor» ou configure KV na Vercel.`,
+        msg: `Imagens enviadas, mas falhou guardar o catálogo: ${msg}. Use «Guardar no servidor». Na Vercel define NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SECRET_KEY (Supabase), ou KV_REST_API_URL e KV_REST_API_TOKEN (legado).`,
       });
     }
   };

@@ -443,6 +443,13 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     queueMicrotask(() => fileRef.current?.click());
   };
 
+  const setCarouselTitulo = useCallback((cid: string, titulo: string) => {
+    setData((d) => ({
+      ...d,
+      carrossels: d.carrossels.map((c) => (c.id === cid ? { ...c, titulo } : c)),
+    }));
+  }, []);
+
   return (
     <>
       <input
@@ -544,7 +551,25 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                   background: '#fafcfb',
                 }}
               >
-                <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>{block.titulo}</h2>
+                <input
+                  type="text"
+                  value={block.titulo}
+                  onChange={(e) => setCarouselTitulo(block.id, e.target.value)}
+                  aria-label="Título do carrossel"
+                  style={{
+                    flex: '1 1 220px',
+                    minWidth: 0,
+                    margin: 0,
+                    fontSize: '1.15rem',
+                    fontWeight: 700,
+                    fontFamily: 'inherit',
+                    color: 'inherit',
+                    border: '1px solid #e2e8e4',
+                    borderRadius: 8,
+                    padding: '6px 10px',
+                    background: '#fff',
+                  }}
+                />
                 <button
                   type="button"
                   onClick={() => {

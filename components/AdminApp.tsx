@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   closestCenter,
@@ -123,6 +124,103 @@ function SortableStripCard({
   } as const;
   const thumb = thumbSrc(slide);
   const menuOpen = menuSid === sid;
+  const menuAnchorRef = useRef<HTMLDivElement>(null);
+  const [menuPlacement, setMenuPlacement] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!menuOpen) {
+      setMenuPlacement(null);
+      return;
+    }
+    const place = () => {
+      const el = menuAnchorRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const width = 228;
+      let left = r.right - width;
+      if (left < 10) left = 10;
+      if (left + width > window.innerWidth - 10) {
+        left = Math.max(10, window.innerWidth - width - 10);
+      }
+      setMenuPlacement({ top: r.bottom + 8, left, width });
+    };
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [menuOpen]);
+
+  const menuPortal =
+    menuOpen &&
+    menuPlacement &&
+    typeof document !== 'undefined' &&
+    createPortal(
+      <div
+        role="menu"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          top: menuPlacement.top,
+          left: menuPlacement.left,
+          width: menuPlacement.width,
+          zIndex: 99999,
+          background: '#fff',
+          border: '1px solid #e2e8e4',
+          borderRadius: 10,
+          boxShadow: '0 12px 36px rgba(0,0,0,.2)',
+          overflow: 'hidden',
+        }}
+      >
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onEnableMoveMode();
+            setMenuSid(null);
+          }}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '12px 14px',
+            border: 'none',
+            background: 'none',
+            textAlign: 'left',
+            cursor: 'pointer',
+            fontSize: 14,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Mover ordem…
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            if (confirm('Remover esta imagem do carrossel?')) onDelete(sid);
+            setMenuSid(null);
+          }}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '12px 14px',
+            border: 'none',
+            background: 'none',
+            textAlign: 'left',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#b42318',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Excluir
+        </button>
+      </div>,
+      document.body
+    );
 
   return (
     <div
@@ -184,91 +282,6 @@ function SortableStripCard({
           />
         ) : null}
 
-        <div style={{ position: 'absolute', top: 6, right: 6, zIndex: 4 }} onPointerDown={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            aria-label="Opções da imagem"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuSid(menuOpen ? null : sid);
-            }}
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              border: '1px solid rgba(0,0,0,.08)',
-              background: 'rgba(255,255,255,.95)',
-              cursor: 'pointer',
-              fontSize: 18,
-              lineHeight: 1,
-              boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-            }}
-          >
-            ⋮
-          </button>
-          {menuOpen ? (
-            <div
-              role="menu"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: 'absolute',
-                right: 0,
-                marginTop: 6,
-                minWidth: 200,
-                background: '#fff',
-                border: '1px solid #e2e8e4',
-                borderRadius: 10,
-                boxShadow: '0 8px 24px rgba(0,0,0,.12)',
-                overflow: 'hidden',
-              }}
-            >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  onEnableMoveMode();
-                  setMenuSid(null);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '12px 14px',
-                  border: 'none',
-                  background: 'none',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontSize: 14,
-                }}
-              >
-                Mover ordem…
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  if (confirm('Remover esta imagem do carrossel?')) onDelete(sid);
-                  setMenuSid(null);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '12px 14px',
-                  border: 'none',
-                  background: 'none',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  fontSize: 14,
-                  color: '#b42318',
-                }}
-              >
-                Excluir
-              </button>
-            </div>
-          ) : null}
-        </div>
-
         {moveMode ? (
           <div
             style={{
@@ -321,6 +334,34 @@ function SortableStripCard({
           </div>
         ) : null}
       </div>
+
+      <div ref={menuAnchorRef} style={{ position: 'absolute', top: 6, right: 6, zIndex: 10 }} onPointerDown={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          aria-label="Opções da imagem"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuSid(menuOpen ? null : sid);
+          }}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            border: '1px solid rgba(0,0,0,.08)',
+            background: 'rgba(255,255,255,.95)',
+            cursor: 'pointer',
+            fontSize: 18,
+            lineHeight: 1,
+            boxShadow: '0 2px 8px rgba(0,0,0,.08)',
+          }}
+        >
+          ⋮
+        </button>
+      </div>
+
+      {menuPortal}
     </div>
   );
 }

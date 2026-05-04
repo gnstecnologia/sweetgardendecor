@@ -62,6 +62,29 @@ function thumbSrc(sl: Slide): string {
   return '';
 }
 
+/** MIME por vezes vem vazio (móveis); aceitar por extensão. */
+function isLikelyImageFile(f: File): boolean {
+  if (f.type.startsWith('image/')) return true;
+  const name = f.name || '';
+  return /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(name);
+}
+
+function dataTransferHasFiles(dt: DataTransfer): boolean {
+  for (let i = 0; i < dt.types.length; i++) {
+    if (dt.types[i] === 'Files') return true;
+  }
+  return false;
+}
+
+function mergeNewSlidesIntoCarousel(prev: SiteData, cid: string, newSlides: Slide[]): SiteData {
+  const block = prev.carrossels.find((c) => c.id === cid);
+  if (!block) return prev;
+  return {
+    ...prev,
+    carrossels: prev.carrossels.map((c) => (c.id !== cid ? c : { ...c, slides: [...c.slides, ...newSlides] })),
+  };
+}
+
 function SortableStripCard({
   slide,
   block,
@@ -310,9 +333,13 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [moveModeCid, setMoveModeCid] = useState<string | null>(null);
   const [menuSid, setMenuSid] = useState<string | null>(null);
-  const [filePickCid, setFilePickCid] = useState<string | null>(null);
   const [dropHighlightCid, setDropHighlightCid] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<{ cid: string; done: number; total: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  /** Evita corrida: o clique no input pode correr antes do React aplicar setState do cid. */
+  const pendingUploadCidRef = useRef<string | null>(null);
+  const dataRef = useRef(data);
+  dataRef.current = data;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
@@ -362,48 +389,86 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     return j.url;
   };
 
+  const putSiteDataApi = async (payload: SiteData) => {
+    const res = await fetch('/api/site-data', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof j.error === 'string' ? j.error : 'Erro ao guardar');
+  };
+
   const appendImagesToCarousel = async (cid: string, files: FileList | File[]) => {
-    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const list = Array.from(files).filter(isLikelyImageFile);
+    if (!list.length) {
+      setStatus({
+        ok: false,
+        msg: 'Nenhuma imagem reconhecida. Use JPEG, PNG, WebP, HEIC… (em alguns telemóveis o tipo vem vazio; o nome do ficheiro tem de parecer imagem).',
+      });
+      return;
+    }
+
+    const block = dataRef.current.carrossels.find((c) => c.id === cid);
+    if (!block) return;
+    const defLink = block.slides[0]?.link || DEFAULT_LINK;
+    const defTexto = block.slides[0]?.texto || DEFAULT_TEXTO;
+
+    setUploading({ cid, done: 0, total: list.length });
+    setStatus(null);
+
     const uploaded: string[] = [];
-    for (const f of list) {
+    const errors: string[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i];
       try {
         uploaded.push(await uploadFile(f));
+        setUploading({ cid, done: i + 1, total: list.length });
       } catch (err) {
-        setStatus({ ok: false, msg: err instanceof Error ? err.message : 'Upload falhou' });
+        const msg = err instanceof Error ? err.message : 'Upload falhou';
+        errors.push(`${f.name}: ${msg}`);
       }
     }
-    if (!uploaded.length) return;
-    setData((d) => {
-      const block = d.carrossels.find((c) => c.id === cid);
-      if (!block) return d;
-      const defLink = block.slides[0]?.link || DEFAULT_LINK;
-      const defTexto = block.slides[0]?.texto || DEFAULT_TEXTO;
-      const newSlides: Slide[] = uploaded.map((url) => ({
-        sid: newSid(),
-        img: url,
-        imgHover: '',
-        link: defLink,
-        texto: defTexto,
-        destaque: false,
-      }));
-      return {
-        ...d,
-        carrossels: d.carrossels.map((c) => (c.id !== cid ? c : { ...c, slides: [...c.slides, ...newSlides] })),
-      };
-    });
+    setUploading(null);
+
+    if (!uploaded.length) {
+      setStatus({ ok: false, msg: errors.join(' · ') || 'Nenhum upload concluído.' });
+      return;
+    }
+
+    const newSlides: Slide[] = uploaded.map((url) => ({
+      sid: newSid(),
+      img: url,
+      imgHover: '',
+      link: defLink,
+      texto: defTexto,
+      destaque: false,
+    }));
+
+    const merged = mergeNewSlidesIntoCarousel(dataRef.current, cid, newSlides);
+    setData(merged);
+    dataRef.current = merged;
+
+    try {
+      await putSiteDataApi(merged);
+      let msg = `${uploaded.length} imagem(ns) enviada(s) e catálogo guardado no servidor.`;
+      if (errors.length) msg += ` Aviso: ${errors.join(' · ')}`;
+      setStatus({ ok: true, msg });
+      router.refresh();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro';
+      setStatus({
+        ok: false,
+        msg: `Imagens enviadas para disco/Blob, mas falhou guardar o catálogo: ${msg}. Use «Guardar no servidor» ou configure KV na Vercel.`,
+      });
+    }
   };
 
   const save = async () => {
     setSaving(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/site-data', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(typeof j.error === 'string' ? j.error : 'Erro ao guardar');
+      await putSiteDataApi(data);
       setStatus({ ok: true, msg: 'Guardado no servidor.' });
       router.refresh();
     } catch (e) {
@@ -439,8 +504,8 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   };
 
   const openFilePicker = (cid: string) => {
-    setFilePickCid(cid);
-    queueMicrotask(() => fileRef.current?.click());
+    pendingUploadCidRef.current = cid;
+    fileRef.current?.click();
   };
 
   const setCarouselTitulo = useCallback((cid: string, titulo: string) => {
@@ -455,15 +520,15 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
       <input
         ref={fileRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         multiple
         className="sr-only"
         aria-hidden
         onChange={async (ev) => {
-          const cid = filePickCid;
+          const cid = pendingUploadCidRef.current;
+          pendingUploadCidRef.current = null;
           const files = ev.target.files;
           ev.target.value = '';
-          setFilePickCid(null);
           if (!cid || !files?.length) return;
           await appendImagesToCarousel(cid, files);
         }}
@@ -518,9 +583,24 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
           </p>
         ) : null}
 
+        {uploading ? (
+          <p
+            role="status"
+            style={{
+              padding: '0.65rem 1rem',
+              borderRadius: 8,
+              background: '#e8f0fc',
+              color: '#1a2e4a',
+              marginBottom: '1rem',
+            }}
+          >
+            A enviar imagens para o servidor… {uploading.done}/{uploading.total}
+          </p>
+        ) : null}
+
         <p style={{ fontSize: '0.875rem', color: '#5c6f62', marginBottom: '1.25rem' }}>
-          Mesma apresentação do site: em cada bloco pode adicionar várias imagens, reordenar com <strong>Mover ordem…</strong> (arrastar ou setas) e
-          guardar no fim. Uploads vão para a Vercel Blob ou <code>public/uploads</code> em local.
+          Ao adicionar imagens (botão ou largar ficheiros), cada ficheiro é enviado para <code>/api/upload</code> e o catálogo é guardado logo a seguir.
+          Reordenar: <strong>Mover ordem…</strong>. Em local, ficheiros ficam em <code>public/uploads</code>; na Vercel use Blob + KV.
         </p>
 
         {data.carrossels.map((block) => {
@@ -685,15 +765,27 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
 
               <div style={{ padding: '0 12px 16px' }}>
                 <div
-                  onDragEnter={() => setDropHighlightCid(block.id)}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (dataTransferHasFiles(e.dataTransfer)) setDropHighlightCid(block.id);
+                  }}
                   onDragOver={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     e.dataTransfer.dropEffect = 'copy';
                     setDropHighlightCid(block.id);
                   }}
-                  onDragLeave={() => setDropHighlightCid((c) => (c === block.id ? null : c))}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const rel = e.relatedTarget as Node | null;
+                    if (rel && (e.currentTarget as HTMLElement).contains(rel)) return;
+                    setDropHighlightCid((c) => (c === block.id ? null : c));
+                  }}
                   onDrop={async (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     setDropHighlightCid(null);
                     const fl = e.dataTransfer.files;
                     if (fl?.length) await appendImagesToCarousel(block.id, fl);
@@ -712,20 +804,23 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                   </p>
                   <button
                     type="button"
+                    disabled={!!uploading}
                     onClick={() => openFilePicker(block.id)}
                     style={{
                       minHeight: 48,
                       padding: '0 20px',
                       borderRadius: 10,
                       border: 'none',
-                      background: '#2d6a4f',
+                      background: uploading ? '#8aa899' : '#2d6a4f',
                       color: '#fff',
                       fontWeight: 600,
                       fontSize: 15,
-                      cursor: 'pointer',
+                      cursor: uploading ? 'wait' : 'pointer',
                     }}
                   >
-                    Adicionar imagens neste carrossel
+                    {uploading && uploading.cid === block.id
+                      ? `A enviar… ${uploading.done}/${uploading.total}`
+                      : 'Adicionar imagens neste carrossel'}
                   </button>
                 </div>
               </div>

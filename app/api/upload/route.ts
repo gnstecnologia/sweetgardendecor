@@ -4,6 +4,12 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
+function looksLikeImageFile(file: File): boolean {
+  if (file.type.startsWith('image/')) return true;
+  const name = (file.name || '').toLowerCase();
+  return /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(name);
+}
+
 export async function POST(req: Request) {
   let form: FormData;
   try {
@@ -15,6 +21,9 @@ export async function POST(req: Request) {
   const file = form.get('file');
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: 'Ficheiro em falta' }, { status: 400 });
+  }
+  if (!looksLikeImageFile(file)) {
+    return NextResponse.json({ error: 'Apenas ficheiros de imagem são aceites.' }, { status: 400 });
   }
 
   const buf = Buffer.from(await file.arrayBuffer());

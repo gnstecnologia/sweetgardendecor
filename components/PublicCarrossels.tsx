@@ -5,9 +5,6 @@ import { useEffect, useId, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, A11y } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import type { SiteData } from '@/lib/types';
 import { publicImageSrc } from '@/lib/images';
 

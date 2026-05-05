@@ -59,9 +59,39 @@ function ensureSids(d: SiteData): SiteData {
 }
 
 function thumbSrc(sl: Slide): string {
+  if (sl.img && /^blob:/i.test(sl.img)) return sl.img;
   if (sl.img && /^https?:\/\//i.test(sl.img)) return sl.img;
   if (sl.img) return publicImageSrc(sl.img);
   return '';
+}
+
+function updateSlideInSiteData(prev: SiteData, cid: string, sid: string, patch: Partial<Slide>): SiteData {
+  return {
+    ...prev,
+    carrossels: prev.carrossels.map((c) =>
+      c.id !== cid
+        ? c
+        : { ...c, slides: c.slides.map((s) => (s.sid === sid ? { ...s, ...patch } : s)) },
+    ),
+  };
+}
+
+/** Remove campos só-cliente antes do PUT (nunca gravar na base). */
+function siteDataForServer(d: SiteData): SiteData {
+  return {
+    version: d.version,
+    carrossels: d.carrossels.map((c) => ({
+      ...c,
+      slides: c.slides.map((s) => ({
+        sid: s.sid,
+        img: s.img,
+        imgHover: s.imgHover ?? '',
+        link: s.link,
+        texto: s.texto,
+        destaque: !!s.destaque,
+      })),
+    })),
+  };
 }
 
 /** MIME por vezes vem vazio (móveis); aceitar por extensão. Ficheiro sem nome/tipo: o servidor valida por assinatura. */
@@ -271,7 +301,16 @@ function SortableStripCard({
           aspectRatio: '3 / 4',
           background: '#e8eee9',
           boxShadow: '0 2px 10px rgba(0,0,0,.08)',
-          border: moveMode ? '2px solid #95d5b2' : '1px solid #e2e8e4',
+          border:
+            slide.clientUploadStatus === 'preview'
+              ? '2px dashed #d9a227'
+              : slide.clientUploadStatus === 'uploading'
+                ? '2px solid #2d6a4f'
+                : slide.clientUploadStatus === 'error'
+                  ? '2px solid #c42b1c'
+                  : moveMode
+                    ? '2px solid #95d5b2'
+                    : '1px solid #e2e8e4',
         }}
       >
         {thumb ? (
@@ -280,20 +319,114 @@ function SortableStripCard({
             alt=""
             role="presentation"
             onClick={() => {
-              if (!moveMode && thumb) onZoom(thumb);
+              if (!moveMode && thumb && slide.clientUploadStatus !== 'uploading') onZoom(thumb);
             }}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
               display: 'block',
-              cursor: moveMode ? 'default' : 'zoom-in',
+              cursor: moveMode || slide.clientUploadStatus === 'uploading' ? 'default' : 'zoom-in',
               pointerEvents: moveMode ? 'none' : 'auto',
+              opacity: slide.clientUploadStatus === 'uploading' ? 0.85 : 1,
             }}
           />
         ) : (
           <div style={{ fontSize: 12, color: '#5c6f62', textAlign: 'center', padding: 12 }}>Sem imagem</div>
         )}
+
+        {slide.clientUploadStatus === 'preview' ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              padding: 8,
+              pointerEvents: 'none',
+              zIndex: 2,
+              background: 'linear-gradient(transparent 40%, rgba(0,0,0,.35))',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#3d2b00',
+                background: 'rgba(255,248,220,.95)',
+                padding: '5px 10px',
+                borderRadius: 8,
+                boxShadow: '0 1px 4px rgba(0,0,0,.12)',
+              }}
+            >
+              Pré-visualização local
+            </span>
+          </div>
+        ) : null}
+        {slide.clientUploadStatus === 'uploading' ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none',
+              zIndex: 2,
+              background: 'rgba(45,106,79,.28)',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#fff',
+                textShadow: '0 1px 3px rgba(0,0,0,.45)',
+              }}
+            >
+              A enviar…
+            </span>
+          </div>
+        ) : null}
+        {slide.clientUploadStatus === 'error' ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: 8,
+              pointerEvents: 'none',
+              zIndex: 2,
+              background: 'rgba(196,43,28,.18)',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#611a15',
+                background: 'rgba(255,255,255,.96)',
+                padding: '5px 10px',
+                borderRadius: 8,
+                textAlign: 'center',
+                maxWidth: '100%',
+              }}
+            >
+              Falhou o envio
+            </span>
+            {slide.clientUploadError ? (
+              <span style={{ fontSize: 10, color: '#611a15', textAlign: 'center', lineHeight: 1.35 }}>
+                {slide.clientUploadError.slice(0, 120)}
+                {slide.clientUploadError.length > 120 ? '…' : ''}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         {moveMode ? (
           <button
@@ -404,7 +537,12 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   const [moveModeCid, setMoveModeCid] = useState<string | null>(null);
   const [menuSid, setMenuSid] = useState<string | null>(null);
   const [dropHighlightCid, setDropHighlightCid] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<{ cid: string; done: number; total: number } | null>(null);
+  const [uploading, setUploading] = useState<{
+    cid: string;
+    done: number;
+    total: number;
+    phase: 'upload' | 'saving';
+  } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   /** Evita corrida: o clique no input pode correr antes do React aplicar setState do cid. */
   const pendingUploadCidRef = useRef<string | null>(null);
@@ -445,10 +583,23 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   }, []);
 
   const deleteSlide = useCallback((cid: string, sid: string) => {
-    setData((d) => ({
-      ...d,
-      carrossels: d.carrossels.map((c) => (c.id !== cid ? c : { ...c, slides: c.slides.filter((s) => s.sid !== sid) })),
-    }));
+    setData((d) => {
+      const block = d.carrossels.find((c) => c.id === cid);
+      const removed = block?.slides.find((s) => s.sid === sid);
+      if (removed?.img?.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(removed.img);
+        } catch {
+          /* ignore */
+        }
+      }
+      return {
+        ...d,
+        carrossels: d.carrossels.map((c) =>
+          c.id !== cid ? c : { ...c, slides: c.slides.filter((s) => s.sid !== sid) },
+        ),
+      };
+    });
   }, []);
 
   const uploadFile = async (file: File): Promise<string> => {
@@ -471,10 +622,20 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
   };
 
   const putSiteDataApi = async (payload: SiteData) => {
+    const clean = siteDataForServer(payload);
+    for (const c of clean.carrossels) {
+      for (const s of c.slides) {
+        if (typeof s.img === 'string' && s.img.startsWith('blob:')) {
+          throw new Error(
+            'Ainda há imagens só em pré-visualização local ou com envio em falta. Remove as marcadas como erro ou aguarda o envio.'
+          );
+        }
+      }
+    }
     const res = await fetch('/api/site-data', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(clean),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof j.error === 'string' ? j.error : 'Erro ao guardar');
@@ -495,52 +656,81 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     const defLink = block.slides[0]?.link || DEFAULT_LINK;
     const defTexto = block.slides[0]?.texto || DEFAULT_TEXTO;
 
-    setUploading({ cid, done: 0, total: list.length });
-    setStatus(null);
+    const items = list.map((file) => {
+      const sid = newSid();
+      const blobUrl = URL.createObjectURL(file);
+      return { sid, file, blobUrl };
+    });
 
-    const uploaded: string[] = [];
-    const errors: string[] = [];
-    for (let i = 0; i < list.length; i++) {
-      const f = list[i];
-      try {
-        uploaded.push(await uploadFile(f));
-        setUploading({ cid, done: i + 1, total: list.length });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Upload falhou';
-        errors.push(`${f.name}: ${msg}`);
-      }
-    }
-    setUploading(null);
-
-    if (!uploaded.length) {
-      setStatus({ ok: false, msg: errors.join(' · ') || 'Nenhum upload concluído.' });
-      return;
-    }
-
-    const newSlides: Slide[] = uploaded.map((url) => ({
-      sid: newSid(),
-      img: url,
+    const newSlides: Slide[] = items.map(({ sid, blobUrl }) => ({
+      sid,
+      img: blobUrl,
       imgHover: '',
       link: defLink,
       texto: defTexto,
       destaque: false,
+      clientUploadStatus: 'preview',
     }));
 
-    const merged = mergeNewSlidesIntoCarousel(dataRef.current, cid, newSlides);
-    setData(merged);
-    dataRef.current = merged;
+    let working = mergeNewSlidesIntoCarousel(dataRef.current, cid, newSlides);
+    setData(working);
+    setUploading({ cid, done: 0, total: list.length, phase: 'upload' });
+    setStatus(null);
 
+    const errors: string[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const { sid, file, blobUrl } = items[i];
+      working = updateSlideInSiteData(working, cid, sid, { clientUploadStatus: 'uploading' });
+      setData(working);
+
+      try {
+        const url = await uploadFile(file);
+        URL.revokeObjectURL(blobUrl);
+        working = updateSlideInSiteData(working, cid, sid, {
+          img: url,
+          clientUploadStatus: undefined,
+          clientUploadError: undefined,
+        });
+        setData(working);
+        setUploading({ cid, done: i + 1, total: list.length, phase: 'upload' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Upload falhou';
+        errors.push(`${file.name}: ${msg}`);
+        working = updateSlideInSiteData(working, cid, sid, {
+          clientUploadStatus: 'error',
+          clientUploadError: msg,
+        });
+        setData(working);
+      }
+    }
+
+    if (errors.length === list.length) {
+      setUploading(null);
+      setStatus({ ok: false, msg: errors.join(' · ') || 'Nenhum upload concluído.' });
+      return;
+    }
+
+    if (errors.length > 0) {
+      setUploading(null);
+      setStatus({
+        ok: false,
+        msg: `Alguns envios falharam (${errors.length}/${list.length}). Remove as miniaturas com «Falhou o envio» ou corrige e usa «Guardar no servidor» só quando todas tiverem URL do servidor.`,
+      });
+      return;
+    }
+
+    setUploading({ cid, done: list.length, total: list.length, phase: 'saving' });
     try {
-      await putSiteDataApi(merged);
-      let msg = `${uploaded.length} imagem(ns) enviada(s) e catálogo guardado no servidor.`;
-      if (errors.length) msg += ` Aviso: ${errors.join(' · ')}`;
-      setStatus({ ok: true, msg });
+      await putSiteDataApi(working);
+      setUploading(null);
+      setStatus({ ok: true, msg: `${list.length} imagem(ns) enviada(s) e catálogo guardado no servidor.` });
       router.refresh();
     } catch (e) {
+      setUploading(null);
       const msg = e instanceof Error ? e.message : 'Erro';
       setStatus({
         ok: false,
-        msg: `Imagens enviadas, mas falhou guardar o catálogo: ${msg}. Use «Guardar no servidor». Na Vercel define NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SECRET_KEY (Supabase), ou KV_REST_API_URL e KV_REST_API_TOKEN (legado).`,
+        msg: `Imagens no servidor, mas falhou guardar o catálogo: ${msg}. Use «Guardar no servidor». Na Vercel define NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SECRET_KEY (Supabase), ou KV (legado).`,
       });
     }
   };
@@ -677,7 +867,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
               marginBottom: '1rem',
             }}
           >
-            A enviar imagens para o servidor… {uploading.done}/{uploading.total}
+            {uploading.phase === 'saving'
+              ? 'A guardar o catálogo no servidor…'
+              : `A enviar imagens (${uploading.done}/${uploading.total})…`}
           </p>
         ) : null}
 
@@ -903,7 +1095,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                     }}
                   >
                     {uploading && uploading.cid === block.id
-                      ? `A enviar… ${uploading.done}/${uploading.total}`
+                      ? uploading.phase === 'saving'
+                        ? 'A guardar catálogo…'
+                        : `Pré-visualização → envio ${uploading.done}/${uploading.total}`
                       : 'Adicionar imagens neste carrossel'}
                   </button>
                 </div>

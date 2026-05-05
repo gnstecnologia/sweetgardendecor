@@ -5,6 +5,9 @@ export type Slide = {
   link: string;
   texto: string;
   destaque?: boolean;
+  /** Só no painel admin durante upload; nunca persistir. */
+  clientUploadStatus?: 'preview' | 'uploading' | 'error';
+  clientUploadError?: string;
 };
 
 export type Carrossel = {

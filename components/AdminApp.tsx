@@ -64,11 +64,13 @@ function thumbSrc(sl: Slide): string {
   return '';
 }
 
-/** MIME por vezes vem vazio (móveis); aceitar por extensão. */
+/** MIME por vezes vem vazio (móveis); aceitar por extensão. Ficheiro sem nome/tipo: o servidor valida por assinatura. */
 function isLikelyImageFile(f: File): boolean {
   if (f.type.startsWith('image/')) return true;
   const name = f.name || '';
-  return /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(name);
+  if (/\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(name)) return true;
+  if (!name && !f.type && f.size > 0) return true;
+  return false;
 }
 
 function dataTransferHasFiles(dt: DataTransfer): boolean {
@@ -453,9 +455,18 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     const fd = new FormData();
     fd.set('file', file);
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
-    const j = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(typeof j.error === 'string' ? j.error : 'Upload falhou');
-    if (typeof j.url !== 'string') throw new Error('Resposta inválida');
+    const text = await res.text();
+    let j: { error?: string; url?: string } = {};
+    try {
+      j = JSON.parse(text) as typeof j;
+    } catch {
+      /* resposta não JSON (ex.: página de erro HTML) */
+    }
+    if (!res.ok) {
+      const detail = typeof j.error === 'string' ? j.error : text.slice(0, 200);
+      throw new Error(detail || `Upload falhou (HTTP ${res.status})`);
+    }
+    if (typeof j.url !== 'string') throw new Error('Resposta inválida do servidor.');
     return j.url;
   };
 
@@ -575,7 +586,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
 
   const openFilePicker = (cid: string) => {
     pendingUploadCidRef.current = cid;
-    fileRef.current?.click();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => fileRef.current?.click());
+    });
   };
 
   const setCarouselTitulo = useCallback((cid: string, titulo: string) => {

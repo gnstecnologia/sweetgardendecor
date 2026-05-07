@@ -784,6 +784,15 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     }));
   }, []);
 
+  const handleCarouselFileSelection = async (cid: string, files: File[]) => {
+    if (!files.length) {
+      setStatus({ ok: false, msg: 'Nenhum ficheiro foi selecionado.' });
+      return;
+    }
+    setStatus({ ok: true, msg: `${files.length} ficheiro(s) selecionado(s). A preparar pré-visualização...` });
+    await appendImagesToCarousel(cid, files);
+  };
+
   return (
     <>
       <header
@@ -815,7 +824,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
               cursor: saving ? 'wait' : 'pointer',
             }}
           >
-            {saving ? 'A guardar…' : 'Guardar no servidor'}
+            {saving ? 'A guardar…' : 'Salvar alterações'}
           </button>
         </div>
       </header>
@@ -1100,25 +1109,28 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                     transition: 'border-color .15s, background .15s',
                   }}
                 >
-                  <p style={{ margin: '0 0 12px', fontSize: 14, color: '#5c6f62' }}>
-                    Largue imagens aqui ou use o botão — <strong>{block.titulo}</strong>
+                  <p style={{ margin: '0 0 10px', fontSize: 14, color: '#5c6f62' }}>
+                    Arraste imagens para esta area — <strong>{block.titulo}</strong>
                   </p>
-                  <div
+                  <label
                     style={{
-                      minHeight: 48,
-                      padding: '0 20px',
-                      borderRadius: 10,
-                      border: 'none',
-                      background: uploading ? '#8aa899' : '#2d6a4f',
-                      color: '#fff',
-                      fontWeight: 600,
-                      fontSize: 15,
-                      cursor: uploading ? 'wait' : 'pointer',
+                      position: 'relative',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 8,
-                      position: 'relative',
+                      minHeight: 46,
+                      padding: '0 18px',
+                      borderRadius: 999,
+                      border: '1px solid #1f5d44',
+                      background: uploading
+                        ? 'linear-gradient(180deg, #95b8a8 0%, #7ea592 100%)'
+                        : 'linear-gradient(180deg, #2f7a57 0%, #255f45 100%)',
+                      color: '#fff',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      boxShadow: uploading ? 'none' : '0 8px 20px rgba(37,95,69,.22)',
+                      cursor: uploading ? 'wait' : 'pointer',
                       overflow: 'hidden',
                     }}
                     aria-disabled={!!uploading}
@@ -1129,13 +1141,9 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                       multiple
                       disabled={!!uploading}
                       onChange={async (ev) => {
-                        const files = ev.target.files;
-                        ev.target.value = '';
-                        if (!files?.length) {
-                          setStatus({ ok: false, msg: 'Nenhum ficheiro foi selecionado.' });
-                          return;
-                        }
-                        await appendImagesToCarousel(block.id, files);
+                        const picked = ev.currentTarget.files ? Array.from(ev.currentTarget.files) : [];
+                        ev.currentTarget.value = '';
+                        await handleCarouselFileSelection(block.id, picked);
                       }}
                       style={{
                         position: 'absolute',
@@ -1143,18 +1151,20 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                         width: '100%',
                         height: '100%',
                         opacity: 0,
-                        zIndex: 2,
                         cursor: uploading ? 'wait' : 'pointer',
                       }}
                     />
                     <span style={{ pointerEvents: 'none' }}>
                       {uploading && uploading.cid === block.id
                         ? uploading.phase === 'saving'
-                          ? 'A guardar catálogo…'
-                          : `Pré-visualização → envio ${uploading.done}/${uploading.total}`
-                        : 'Adicionar imagens neste carrossel'}
+                          ? 'Salvando...'
+                          : `Enviando ${uploading.done}/${uploading.total}...`
+                        : 'Selecionar imagens'}
                     </span>
-                  </div>
+                  </label>
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: '#5c6f62' }}>
+                    Toque/clique no botao para selecionar e ver o preview automaticamente.
+                  </p>
                 </div>
               </div>
             </section>

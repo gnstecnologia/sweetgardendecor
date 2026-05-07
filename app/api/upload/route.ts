@@ -8,10 +8,13 @@ export const dynamic = 'force-dynamic';
 const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/jpg': '.jpg',
+  'image/pjpeg': '.jpg',
+  'image/jfif': '.jfif',
   'image/png': '.png',
   'image/gif': '.gif',
   'image/webp': '.webp',
   'image/avif': '.avif',
+  'image/jxl': '.jxl',
   'image/svg+xml': '.svg',
   'image/bmp': '.bmp',
   'image/tiff': '.tiff',
@@ -27,7 +30,7 @@ function extFromMime(mime: string): string | null {
 function looksLikeImageByMeta(name: string, mime: string): boolean {
   if (mime.startsWith('image/')) return true;
   const n = (name || '').toLowerCase();
-  return /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(n);
+  return /\.(jpe?g|jfif|png|gif|webp|avif|heic|heif|bmp|tiff?|svg|jxl)$/i.test(n);
 }
 
 /** Alguns telemóveis enviam octet-stream ou tipo vazio; aceitar por assinatura mágica. */
@@ -74,7 +77,7 @@ export async function POST(req: Request) {
 
   const extMatch = orig.match(/(\.[a-z0-9]+)$/i);
   const extFromName = extMatch ? extMatch[1].toLowerCase() : null;
-  const ext = extFromName && /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(extFromName)
+  const ext = extFromName && /\.(jpe?g|jfif|png|gif|webp|avif|heic|heif|bmp|tiff?|svg|jxl)$/i.test(extFromName)
     ? extFromName
     : extFromMime(mime) || '.jpg';
   const base = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${ext}`;
@@ -85,10 +88,12 @@ export async function POST(req: Request) {
       '.webp': 'image/webp',
       '.gif': 'image/gif',
       '.avif': 'image/avif',
+      '.jxl': 'image/jxl',
       '.svg': 'image/svg+xml',
       '.bmp': 'image/bmp',
       '.tiff': 'image/tiff',
       '.tif': 'image/tiff',
+      '.jfif': 'image/jpeg',
       '.heic': 'image/heic',
       '.heif': 'image/heif',
     };

@@ -97,8 +97,9 @@ function siteDataForServer(d: SiteData): SiteData {
 /** MIME por vezes vem vazio (móveis); aceitar por extensão. Ficheiro sem nome/tipo: o servidor valida por assinatura. */
 function isLikelyImageFile(f: File): boolean {
   if (f.type.startsWith('image/')) return true;
+  if (!f.type || f.type === 'application/octet-stream') return f.size > 0;
   const name = f.name || '';
-  if (/\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|tiff?|svg)$/i.test(name)) return true;
+  if (/\.(jpe?g|jfif|png|gif|webp|avif|heic|heif|bmp|tiff?|svg|jxl)$/i.test(name)) return true;
   if (!name && !f.type && f.size > 0) return true;
   return false;
 }
@@ -531,6 +532,7 @@ function SortableStripCard({
 export default function AdminApp({ initialData }: { initialData: SiteData }) {
   const router = useRouter();
   const [data, setData] = useState<SiteData>(() => ensureSids(initialData));
+  const [isClientMounted, setIsClientMounted] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -543,9 +545,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     total: number;
     phase: 'upload' | 'saving';
   } | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  /** Evita corrida: o clique no input pode correr antes do React aplicar setState do cid. */
-  const pendingUploadCidRef = useRef<string | null>(null);
   const dataRef = useRef(data);
   dataRef.current = data;
   /** Scroll horizontal das miniaturas (admin) — sincroniza com o Swiper da pré-visualização. */
@@ -555,6 +554,10 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!menuSid) return;
@@ -774,13 +777,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
     }));
   };
 
-  const openFilePicker = (cid: string) => {
-    pendingUploadCidRef.current = cid;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => fileRef.current?.click());
-    });
-  };
-
   const setCarouselTitulo = useCallback((cid: string, titulo: string) => {
     setData((d) => ({
       ...d,
@@ -790,23 +786,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
 
   return (
     <>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*,.heic,.heif"
-        multiple
-        className="sr-only"
-        aria-hidden
-        onChange={async (ev) => {
-          const cid = pendingUploadCidRef.current;
-          pendingUploadCidRef.current = null;
-          const files = ev.target.files;
-          ev.target.value = '';
-          if (!cid || !files?.length) return;
-          await appendImagesToCarousel(cid, files);
-        }}
-      />
-
       <header
         style={{
           position: 'sticky',
@@ -997,42 +976,88 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
               ) : null}
 
               <div style={{ padding: '14px 12px 8px' }}>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd(block.id, ids)}>
-                  <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
-                    <AdminStripScrollHost
-                      blockId={block.id}
-                      stripRegistryRef={adminStripElRef}
-                      style={{
-                        display: 'flex',
-                        gap: 12,
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        paddingBottom: 8,
-                        scrollSnapType: 'x proximity',
-                        WebkitOverflowScrolling: 'touch',
-                        scrollbarGutter: 'stable',
-                      }}
-                    >
-                      {block.slides.map((sl, index) => (
-                        <div key={sl.sid} style={{ scrollSnapAlign: 'start' }}>
-                          <SortableStripCard
-                            slide={sl}
-                            block={block}
-                            index={index}
-                            moveMode={moveMode}
-                            menuSid={menuSid}
-                            setMenuSid={setMenuSid}
-                            onDelete={(sid) => deleteSlide(block.id, sid)}
-                            onMoveLeft={(sid) => moveSlide(block.id, sid, -1)}
-                            onMoveRight={(sid) => moveSlide(block.id, sid, 1)}
-                            onZoom={setLightbox}
-                            onEnableMoveMode={() => setMoveModeCid(block.id)}
-                          />
+                {isClientMounted ? (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd(block.id, ids)}>
+                    <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
+                      <AdminStripScrollHost
+                        blockId={block.id}
+                        stripRegistryRef={adminStripElRef}
+                        style={{
+                          display: 'flex',
+                          gap: 12,
+                          overflowX: 'auto',
+                          overflowY: 'hidden',
+                          paddingBottom: 8,
+                          scrollSnapType: 'x proximity',
+                          WebkitOverflowScrolling: 'touch',
+                          scrollbarGutter: 'stable',
+                        }}
+                      >
+                        {block.slides.map((sl, index) => (
+                          <div key={sl.sid} style={{ scrollSnapAlign: 'start' }}>
+                            <SortableStripCard
+                              slide={sl}
+                              block={block}
+                              index={index}
+                              moveMode={moveMode}
+                              menuSid={menuSid}
+                              setMenuSid={setMenuSid}
+                              onDelete={(sid) => deleteSlide(block.id, sid)}
+                              onMoveLeft={(sid) => moveSlide(block.id, sid, -1)}
+                              onMoveRight={(sid) => moveSlide(block.id, sid, 1)}
+                              onZoom={setLightbox}
+                              onEnableMoveMode={() => setMoveModeCid(block.id)}
+                            />
+                          </div>
+                        ))}
+                      </AdminStripScrollHost>
+                    </SortableContext>
+                  </DndContext>
+                ) : (
+                  <AdminStripScrollHost
+                    blockId={block.id}
+                    stripRegistryRef={adminStripElRef}
+                    style={{
+                      display: 'flex',
+                      gap: 12,
+                      overflowX: 'auto',
+                      overflowY: 'hidden',
+                      paddingBottom: 8,
+                      scrollSnapType: 'x proximity',
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarGutter: 'stable',
+                    }}
+                  >
+                    {block.slides.map((sl) => (
+                      <div key={sl.sid} style={{ scrollSnapAlign: 'start' }}>
+                        <div style={{ flex: '0 0 auto', width: 132, position: 'relative', touchAction: 'auto' }}>
+                          <div
+                            style={{
+                              position: 'relative',
+                              borderRadius: 12,
+                              overflow: 'hidden',
+                              aspectRatio: '3 / 4',
+                              background: '#e8eee9',
+                              boxShadow: '0 2px 10px rgba(0,0,0,.08)',
+                              border: '1px solid #e2e8e4',
+                            }}
+                          >
+                            {thumbSrc(sl) ? (
+                              <img
+                                src={thumbSrc(sl)}
+                                alt=""
+                                role="presentation"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              />
+                            ) : (
+                              <div style={{ fontSize: 12, color: '#5c6f62', textAlign: 'center', padding: 12 }}>Sem imagem</div>
+                            )}
+                          </div>
                         </div>
-                      ))}
-                    </AdminStripScrollHost>
-                  </SortableContext>
-                </DndContext>
+                      </div>
+                    ))}
+                  </AdminStripScrollHost>
+                )}
 
                 {!block.slides.length ? (
                   <p style={{ color: '#5c6f62', fontSize: 14, margin: '8px 4px 0' }}>Ainda não há imagens neste carrossel.</p>
@@ -1078,10 +1103,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                   <p style={{ margin: '0 0 12px', fontSize: 14, color: '#5c6f62' }}>
                     Largue imagens aqui ou use o botão — <strong>{block.titulo}</strong>
                   </p>
-                  <button
-                    type="button"
-                    disabled={!!uploading}
-                    onClick={() => openFilePicker(block.id)}
+                  <label
                     style={{
                       minHeight: 48,
                       padding: '0 20px',
@@ -1092,14 +1114,37 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                       fontWeight: 600,
                       fontSize: 15,
                       cursor: uploading ? 'wait' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
                     }}
+                    aria-disabled={!!uploading}
                   >
-                    {uploading && uploading.cid === block.id
-                      ? uploading.phase === 'saving'
-                        ? 'A guardar catálogo…'
-                        : `Pré-visualização → envio ${uploading.done}/${uploading.total}`
-                      : 'Adicionar imagens neste carrossel'}
-                  </button>
+                    <input
+                      type="file"
+                      accept="image/*,.heic,.heif"
+                      multiple
+                      disabled={!!uploading}
+                      style={{ display: 'none' }}
+                      onChange={async (ev) => {
+                        const files = ev.target.files;
+                        ev.target.value = '';
+                        if (!files?.length) {
+                          setStatus({ ok: false, msg: 'Nenhum ficheiro foi selecionado.' });
+                          return;
+                        }
+                        await appendImagesToCarousel(block.id, files);
+                      }}
+                    />
+                    <span>
+                      {uploading && uploading.cid === block.id
+                        ? uploading.phase === 'saving'
+                          ? 'A guardar catálogo…'
+                          : `Pré-visualização → envio ${uploading.done}/${uploading.total}`
+                        : 'Adicionar imagens neste carrossel'}
+                    </span>
+                  </label>
                 </div>
               </div>
             </section>

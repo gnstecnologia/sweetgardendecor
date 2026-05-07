@@ -1103,7 +1103,7 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                   <p style={{ margin: '0 0 12px', fontSize: 14, color: '#5c6f62' }}>
                     Largue imagens aqui ou use o botão — <strong>{block.titulo}</strong>
                   </p>
-                  <label
+                  <div
                     style={{
                       minHeight: 48,
                       padding: '0 20px',
@@ -1118,6 +1118,8 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 8,
+                      position: 'relative',
+                      overflow: 'hidden',
                     }}
                     aria-disabled={!!uploading}
                   >
@@ -1126,7 +1128,6 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                       accept="image/*,.heic,.heif"
                       multiple
                       disabled={!!uploading}
-                      style={{ display: 'none' }}
                       onChange={async (ev) => {
                         const files = ev.target.files;
                         ev.target.value = '';
@@ -1136,15 +1137,24 @@ export default function AdminApp({ initialData }: { initialData: SiteData }) {
                         }
                         await appendImagesToCarousel(block.id, files);
                       }}
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        zIndex: 2,
+                        cursor: uploading ? 'wait' : 'pointer',
+                      }}
                     />
-                    <span>
+                    <span style={{ pointerEvents: 'none' }}>
                       {uploading && uploading.cid === block.id
                         ? uploading.phase === 'saving'
                           ? 'A guardar catálogo…'
                           : `Pré-visualização → envio ${uploading.done}/${uploading.total}`
                         : 'Adicionar imagens neste carrossel'}
                     </span>
-                  </label>
+                  </div>
                 </div>
               </div>
             </section>
